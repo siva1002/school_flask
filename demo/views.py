@@ -2,12 +2,12 @@ from . serializer import UserSerializer
 from .extension import db
 from .models import User, Profile,Token
 from flask import Blueprint, render_template, request,jsonify,make_response
+import jwt
 views = Blueprint('views', __name__)
 import uuid
 @views.route('/')
 def index():
     return 'Hello, world'
-
 
 @views.route('signup/', methods=['GET','POST'])
 def signup():
@@ -50,9 +50,11 @@ def signup():
                           lastname=lastname, fullname=fullname, user_type='is_student', user_id=user)
             pro.save()
     return render_template('signup.html')
-
-@views.route('/api', methods=['GET'])
+# @token_required
+@views.route('/api/', methods=['GET'])
 def api():
+    headers=request.headers
+    print(request.headers)
     user = User.query.get(1)
     print(user)
     print(user.profile.lastname)
@@ -67,12 +69,15 @@ def log():
 @views.route('/login/',methods=['GET', 'POST'])
 def login():
     if request.method=='POST':
-        email=request.form['email']
-        phone=request.form['phone']
+        data=request.get_json()
+        # email=request.form['email']
+        # phone=request.form['phone']
+        email=data['email']
+        phone=data['phone']
         print(email)
         print(phone)
         user=User.query.filter_by(email=email,phone=phone).first()
-        print(user.id)
+        print(User.query.filter_by(email=email,phone=phone).count()) 
         if user:
             try:
                 if Token.query.get(user.id):
@@ -81,10 +86,12 @@ def login():
                     }
                 else:
                     token=Token(user_id=user.id,token=str(uuid.uuid4()))
-                    db.session.add(token)
-                    db.session.commit()
-                    return token 
+                    token.save()
+                    return {'token':token.token,
+                            'user-type':user.profile.user_type
+                    }
             except:
                 return make_response('Something went wrong')
         else:
             return make_response('User Does Not Exist')
+            
