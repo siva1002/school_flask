@@ -1,15 +1,17 @@
+import uuid
 from . serializer import UserSerializer
 from .extension import db
-from .models import User, Profile,Token
-from flask import Blueprint, render_template, request,jsonify,make_response
+from .models import User, Profile, Token
+from flask import Blueprint, render_template, request, jsonify, make_response
 views = Blueprint('views', __name__)
-import uuid
+
+
 @views.route('/')
 def index():
     return 'Hello, world'
 
 
-@views.route('signup/', methods=['GET','POST'])
+@views.route('signup/', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
         email = request.form['email']
@@ -19,7 +21,7 @@ def signup():
         address = request.form['ad']
         phone = request.form['phone']
         reg = request.form['reg']
-        usertype= request.form['usertype']
+        usertype = request.form['usertype']
         # data=request.get_json()
         # email=data['email']
         # firstname=data['fname']
@@ -28,8 +30,8 @@ def signup():
         # address=data['ad']
         # phone=data['phone']
         # reg=data['reg']
-        if  usertype  == 'is_admin' or  usertype == 'is_staff':
-            if  usertype != 'is_admin':
+        if usertype == 'is_admin' or usertype == 'is_staff':
+            if usertype != 'is_admin':
                 user = User(email=email, register_number=reg,
                             address=address, phone=phone)
                 user = user.save()
@@ -51,6 +53,7 @@ def signup():
             pro.save()
     return render_template('signup.html')
 
+
 @views.route('/api', methods=['GET'])
 def api():
     user = User.query.get(1)
@@ -61,29 +64,32 @@ def api():
     data = seraialize.dump(user)
     return data
 
-@views.route('/users',methods=['GET', 'PUT'])
+
+@views.route('/users', methods=['GET', 'PUT'])
 def log():
     print(request.user)
-@views.route('/login/',methods=['GET', 'POST'])
+
+
+@views.route('/login/', methods=['GET', 'POST'])
 def login():
-    if request.method=='POST':
-        email=request.form['email']
-        phone=request.form['phone']
+    if request.method == 'POST':
+        email = request.form['email']
+        phone = request.form['phone']
         print(email)
         print(phone)
-        user=User.query.filter_by(email=email,phone=phone).first()
+        user = User.query.filter_by(email=email, phone=phone).first()
         print(user.id)
         if user:
             try:
                 if Token.query.get(user.id):
-                    return {'token':user.token.token,
-                            'user-type':user.profile.user_type
-                    }
+                    return {'token': user.token.token,
+                            'user-type': user.profile.user_type
+                            }
                 else:
-                    token=Token(user_id=user.id,token=str(uuid.uuid4()))
+                    token = Token(user_id=user.id, token=str(uuid.uuid4()))
                     db.session.add(token)
                     db.session.commit()
-                    return token 
+                    return token
             except:
                 return make_response('Something went wrong')
         else:
