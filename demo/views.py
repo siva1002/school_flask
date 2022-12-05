@@ -1,34 +1,78 @@
-from .models import User,Profile
-from flask import Blueprint,render_template, request, flash, jsonify
-views=Blueprint('views',__name__)
+from . serializer import UserSerializer
 from .extension import db
+from .models import User, Profile
+from flask import Blueprint, render_template, request,jsonify,make_response
+views = Blueprint('views', __name__)
+
 @views.route('/')
 def index():
     return 'Hello, world'
 
-@views.route('signup/',methods = ['POST','GET','PUT'])
+
+@views.route('signup/', methods=['GET','POST'])
 def signup():
     if request.method == 'POST':
-        email=request.form['email']
-        firstname=request.form['fname']
-        lastname=request.form['lname']
-        fullname=request.form['flname']
-        address=request.form['ad']
-        phone=request.form['phone']
-        reg=request.form['reg']
-        user=User(email=email,register_number=reg,address=address,phone=phone)
-        db.session.add(user)
-        db.session.commit()
-        print(user.id)
-        pro=Profile(standard=request.form['std'],firstname=firstname,lastname=lastname,fullname=fullname,user_type='is_student',user=int(user.id),address=address)
-        db.session.add(pro)
-        db.session.commit()
+        email = request.form['email']
+        firstname = request.form['fname']
+        lastname = request.form['lname']
+        fullname = request.form['flname']
+        address = request.form['ad']
+        phone = request.form['phone']
+        reg = request.form['reg']
+        usertype= request.form['usertype']
+        # data=request.get_json()
+        # email=data['email']
+        # firstname=data['fname']
+        # lastname=data['lname']
+        # fullname=data['flname']
+        # address=data['ad']
+        # phone=data['phone']
+        # reg=data['reg']
+        if  usertype  == 'is_admin' or  usertype == 'is_staff':
+            if  usertype != 'is_admin':
+                user = User(email=email, register_number=reg,
+                            address=address, phone=phone)
+                user = user.save()
+                pro = Profile(standard=request.form['std'], firstname=firstname,
+                              lastname=lastname, fullname=fullname, user_type='is_staff', user_id=user)
+                pro.save()
+            user = User(email=email, register_number=reg,
+                        address=address, phone=phone)
+            user = user.save()
+            pro = Profile(standard=request.form['std'], firstname=firstname,
+                          lastname=lastname, fullname=fullname, user_type='is_admin', user_id=user)
+            pro.save()
+        else:
+            user = User(email=email, register_number=reg,
+                        address=address, phone=phone)
+            user = user.save()
+            pro = Profile(standard=request.form['std'], firstname=firstname,
+                          lastname=lastname, fullname=fullname, user_type='is_student', user_id=user)
+            pro.save()
     return render_template('signup.html')
-@views.route('/api',methods=['GET'])
+
+@views.route('/api', methods=['GET'])
 def api():
-      return User.fs_get_delete_put_post(prop_filters = {'phone':'9942945428'})
-@views.route('/log')
+    user = User.query.get(1)
+    print(user)
+    print(user.profile.lastname)
+    user = User.query.all()
+    seraialize = UserSerializer(many=True)
+    data = seraialize.dump(user)
+    return data
+
+@views.route('/users',methods=['GET', 'PUT'])
 def log():
-    user=User.query.filter_by(address='student').first()
-    
-    return {'address':user.address}
+    print(request.user)
+@views.route('/login/',methods=['GET', 'POST'])
+def login():
+    if request.method=='POST':
+        email=request.form['email']
+        phone=request.form['phone']
+        user=User.query.filter_by(email=email,phone=phone).first()
+        if user:
+            serialize=UserSerializer()
+            data=serialize.dump(user)
+        else:
+            return make_response('User Does Not Exist')
+        return data

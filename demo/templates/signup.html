@@ -1,5 +1,5 @@
 <div class="signup">
-    <form action="/signup" method="post">
+    <form action="/signup" method="post" >
         <label>Email:</label>
         <input class="form-control" placeholder="email" id="id_email" name="email" />
         <p class="email-error text-danger"></p>
@@ -25,6 +25,12 @@
             <input class="form-check-input ml-3" type="checkbox" name="data_entry_user" id="id_data_entry_user" name="usert" />
         </div>
     </div> -->
+    <select class="form-control" onchange="user_type_change()" name="usertype" id="id_user_type">
+        <option value="" selected="">-------</option>
+        <option value="is_student">is_student</option>
+        <option value="is_staff">is_staff</option>
+        <option value="is_admin">is_admin</option>
+      </select>
     <input type="text" class="form-control" name="std">
     <button id="signup-btn">Register</button>
     </form>
