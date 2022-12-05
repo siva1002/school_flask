@@ -11,6 +11,7 @@ class User(fxmixn,db.Model):
     phone= db.Column(db.String(10),unique=True)
     address = db.Column(db.String(100))
     profile=db.relationship('Profile',backref='user',uselist=False)
+    token=db.relationship('Token',backref='user',uselist=False)
     __fs_create_fields__ = __fs_update_fields__ = ['email','address','phone','register_number']
     
     def __init__(self,email,register_number,phone,address):
@@ -33,7 +34,7 @@ class Profile(fxmixn,db.Model):
     firstname = db.Column(db.String(128))
     lastname = db.Column(db.String(128))
     standard = db.Column(db.String(128))
-    # section= db.Column(ARRAY(db.String))
+    section= db.Column(ARRAY(db.String))
     __fs_create_fields__ = __fs_update_fields__ = ['fullname', 'firstname', 'lastname', 'standard', 'section','address']
     __fs_relationship_fields__ = ['user_id']
     def __init__(self,standard,fullname,lastname,firstname,user_type,user_id):
@@ -46,3 +47,10 @@ class Profile(fxmixn,db.Model):
     def save(self):
         db.session.add(self)
         db.session.commit()
+class Token(db.Model):
+  id = db.Column(db.Integer, primary_key=True)
+  user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+  token=db.Column(db.String(200))
+  def __init__(self,user_id,token):
+    self.user_id = user_id
+    self.token=token

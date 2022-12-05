@@ -1,9 +1,9 @@
 from . serializer import UserSerializer
 from .extension import db
-from .models import User, Profile
+from .models import User, Profile,Token
 from flask import Blueprint, render_template, request,jsonify,make_response
 views = Blueprint('views', __name__)
-
+import uuid
 @views.route('/')
 def index():
     return 'Hello, world'
@@ -69,10 +69,22 @@ def login():
     if request.method=='POST':
         email=request.form['email']
         phone=request.form['phone']
+        print(email)
+        print(phone)
         user=User.query.filter_by(email=email,phone=phone).first()
+        print(user.id)
         if user:
-            serialize=UserSerializer()
-            data=serialize.dump(user)
+            try:
+                if Token.query.get(user.id):
+                    return {'token':user.token.token,
+                            'user-type':user.profile.user_type
+                    }
+                else:
+                    token=Token(user_id=user.id,token=str(uuid.uuid4()))
+                    db.session.add(token)
+                    db.session.commit()
+                    return token 
+            except:
+                return make_response('Something went wrong')
         else:
             return make_response('User Does Not Exist')
-        return data
