@@ -33,6 +33,17 @@ class User(fxmixn, db.Model):
         return self.email
 
 
+class Movie(db.Document):
+    id = db.Integer
+    email = db.String(30)
+    register_number = db.String(15)
+    phone = db.String(10)
+    addres = db.String(110)
+    profile = db.Integer
+    token = db.Integer
+    name = db.String(30)
+
+
 class Profile(fxmixn, db.Model):
     __tablename__ = 'profile'
     id = db.Column(db.Integer, primary_key=True)

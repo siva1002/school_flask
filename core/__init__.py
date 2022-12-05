@@ -1,5 +1,4 @@
 from flask import Flask, render_template, request
-
 from .extension import db
 from . views import views
 from flask_migrate import Migrate
@@ -17,5 +16,6 @@ def create_app():
     app.register_blueprint(views, url_prefix='/')
     db.init_app(app)
     alembic.init_app(app)
+    # jwt = JWTManager(app)
     Migrate(app, db)
     return app

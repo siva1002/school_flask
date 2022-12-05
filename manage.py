@@ -1,7 +1,7 @@
 from flask_script import Manager, Server
 from flask_migrate import Migrate
-from demo import create_app
-from demo import db, alembic
+from core import create_app
+from core import db, alembic
 
 app = create_app()
 manager = Manager(app=app)
