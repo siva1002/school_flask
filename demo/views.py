@@ -1,17 +1,20 @@
+import uuid
 from . serializer import UserSerializer
 from .extension import db
+# from . import app
 from .models import User, Profile,Token
 from flask import Blueprint, render_template, request,jsonify,make_response
 import jwt
+from flask_pymongo import PyMongo
 views = Blueprint('views', __name__)
-import uuid
 @views.route('/')
 def index():
-    return 'Hello, world'
 
-@views.route('signup/', methods=['GET','POST'])
+    return 'Hello, world'
+    
+@views.route('signup/', methods=['GET', 'POST'])
 def signup():
-    if request.method == 'POST':
+    if request.method == 'POST': 
         email = request.form['email']
         firstname = request.form['fname']
         lastname = request.form['lname']
@@ -19,7 +22,7 @@ def signup():
         address = request.form['ad']
         phone = request.form['phone']
         reg = request.form['reg']
-        usertype= request.form['usertype']
+        usertype = request.form['usertype']
         # data=request.get_json()
         # email=data['email']
         # firstname=data['fname']
@@ -28,8 +31,8 @@ def signup():
         # address=data['ad']
         # phone=data['phone']
         # reg=data['reg']
-        if  usertype  == 'is_admin' or  usertype == 'is_staff':
-            if  usertype != 'is_admin':
+        if usertype == 'is_admin' or usertype == 'is_staff':
+            if usertype != 'is_admin':
                 user = User(email=email, register_number=reg,
                             address=address, phone=phone)
                 user = user.save()
@@ -63,10 +66,13 @@ def api():
     data = seraialize.dump(user)
     return data
 
-@views.route('/users',methods=['GET', 'PUT'])
+
+@views.route('/users', methods=['GET', 'PUT'])
 def log():
     print(request.user)
-@views.route('/login/',methods=['GET', 'POST'])
+
+
+@views.route('/login/', methods=['GET', 'POST'])
 def login():
     if request.method=='POST':
         data=request.get_json()
@@ -81,9 +87,9 @@ def login():
         if user:
             try:
                 if Token.query.get(user.id):
-                    return {'token':user.token.token,
-                            'user-type':user.profile.user_type
-                    }
+                    return {'token': user.token.token,
+                            'user-type': user.profile.user_type
+                            }
                 else:
                     token=Token(user_id=user.id,token=str(uuid.uuid4()))
                     token.save()
