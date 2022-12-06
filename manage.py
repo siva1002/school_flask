@@ -5,26 +5,22 @@ from core import db, alembic
 
 app = create_app()
 manager = Manager(app=app)
-manager.add_command("run", Server(host="0.0.0.0", port=8000))
+manager.add_command("run", Server(host="127.0.0.0", port=8000))
 
+# @manager.command
+# def migrate():
+#     alembic.revision('making changes')
+#     alembic.upgrade()
 
-@manager.command
-def migrate():
-    alembic.revision('making changes')
-    alembic.upgrade()
+# @manager.command
+# def create():
+#     db.create_all()
+#     print("Database created successfully")
 
-
-@manager.command
-def create():
-    db.create_all()
-    print("Database created successfully")
-
-
-@manager.command
-def remove():
-    db.drop_all()
-    print("Database removed successfully")
-
+# @manager.command
+# def drop():
+#     db.drop_all()
+#     print("Database removed successfully")
 
 if __name__ == "__main__":
     manager.run()
