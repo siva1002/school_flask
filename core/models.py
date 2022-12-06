@@ -1,74 +1,47 @@
-# # from .extension import db
-# from pydantic import BaseModel, Field
-# from typing import Optional
-# from bson import ObjectId
-# import json
-# import datetime
-
-
-# from mongoengine import Document, StringField, EmailField, IntField
-
-
-# class User(Document):
-#     email = EmailField(required=True)
-#     phone = IntField(required=True)
-#     # first_name = StringField(max_length=1000)
-#     # last_name = StringField(max_length=1000)
-#     # age = IntField()
-
-
-# class PydanticObjectId(ObjectId):
-
-#     @classmethod
-#     def __get_validators__(cls):
-#         yield cls.validate
-
-#     @classmethod
-#     def validate(cls, v):
-#         return PydanticObjectId(v)
-
-#     @classmethod
-#     def __modify_schema__(cls, field_schema: dict):
-#         field_schema.update(
-#             type="string",
-#             examples=["5eb7cf5a86d9755df3a6c593", "5eb7cfb05e32e07750a1756a"],
-#         )
-
-
-# # ENCODERS_BY_TYPE[PydanticObjectId] = str
-
-
-# class User(BaseModel):
-#     email: str
-#     phone: int
-
-#     def to_bson(self):
-#         data = self.dict(by_alias=True, exclude_none=True)
-#         return data
-
-#     def to_json(self):
-#         return json.dumps(self, cls=JSONEncoder)
-
-
-# class JSONEncoder(json.JSONEncoder):
-#     def default(self, o):
-#         print(self, o)
-#         if isinstance(o, ObjectId):
-#             return str(o)
-#         if isinstance(o, datetime):
-#             return str(o)
-#         return json.JSONEncoder.default(self, o)
-from mongoengine import Document,StringField,EmailField,IntField,ReferenceField
-
-class User(Document):
+from pydantic import BaseModel, Field
+from typing import Optional
+from bson import ObjectId
+import json
+import datetime
+import uuid
+from mongoengine import Document, StringField, EmailField, IntField, ObjectIdField, ValidationError, ReferenceField, CASCADE, BooleanField
+from flask_login import UserMixin
+class User(Document, UserMixin):
+    id = IntField(required=True, primary_key=True)
     email = EmailField(required=True)
-    phone= IntField(required=True)
-    registernumber= StringField(max_length=50)
-    def _init__(self, email,phone,registernumber):
-      self.email=email,
-      self.phone=phone,
-      self.registernumber=registernumber
-    meta={'collection': 'users'}
+    phone = IntField(required=True)
+    
+    is_active = BooleanField(default=True)
+    meta = {'collections': 'user'}
+
+    def _init__(self, email, phone,registernumber):
+        self.email = email
+        self.phone = phone
+        self.registernumber=registernumber
+
+    def get_id(self):
+        return self.id
+
+    def clean(self):
+        users = User.objects
+        # if users(email__exists=self.email):
+        #     raise ValidationError({'error': 'altready exists'})
+        self.id = users.count()
+        print(users)
+
+
+class Token(Document):
+    user_id = ReferenceField(document_type=User, reverse_delete_rule=CASCADE)
+    token_id = StringField()
+    meta = {'collections': 'token'}
+
+    def _init__(self, user_id, token_id):
+        self.user_id = user_id
+        self.token_id = token_id
+
+    def save(self, *args, **kwargs):
+        self.token_id = str(uuid.uuid4())
+        super(Token, self).save(*args, **kwargs)
 class Profile(Document):
     firstname = StringField(max_length=50)
     lastname = StringField(max_length=50)
