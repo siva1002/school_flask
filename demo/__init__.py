@@ -1,6 +1,6 @@
 from flask import Flask,render_template,request
 from flask_admin import Admin
-from .extension import db
+from .extension import mongo
 from . views import views
 from flask_migrate import Migrate
 from flask_alembic import Alembic
@@ -17,5 +17,6 @@ def create_app():
     app.app_context().push()
     app.register_blueprint(views, url_prefix='/')
     alembic.init_app(app)
-    Migrate(app, db)
+    mongo.init_app(app)
+    # Migrate(app, db)
     return app

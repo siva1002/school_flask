@@ -1,11 +1,10 @@
 import uuid
 from . serializer import UserSerializer
-from .extension import db
+from .extension import mongo
 # from . import app
-from .models import User, Profile,Token
+# from .models import User, Profile,Token
 from flask import Blueprint, render_template, request,jsonify,make_response
 import jwt
-from flask_pymongo import PyMongo
 views = Blueprint('views', __name__)
 @views.route('/')
 def index():
@@ -23,6 +22,9 @@ def signup():
         phone = request.form['phone']
         reg = request.form['reg']
         usertype = request.form['usertype']
+        user=mongo.db.users
+        user.insert_one({'email': email, 'firstname': firstname, 'lastname': lastname, 'fullname': fullname, 'phone': phone,'register_number':reg,'usertype': usertype,'address': address})
+        return 'created'
         # data=request.get_json()
         # email=data['email']
         # firstname=data['fname']
@@ -31,27 +33,27 @@ def signup():
         # address=data['ad']
         # phone=data['phone']
         # reg=data['reg']
-        if usertype == 'is_admin' or usertype == 'is_staff':
-            if usertype != 'is_admin':
-                user = User(email=email, register_number=reg,
-                            address=address, phone=phone)
-                user = user.save()
-                pro = Profile(standard=request.form['std'], firstname=firstname,
-                              lastname=lastname, fullname=fullname, user_type='is_staff', user_id=user)
-                pro.save()
-            user = User(email=email, register_number=reg,
-                        address=address, phone=phone)
-            user = user.save()
-            pro = Profile(standard=request.form['std'], firstname=firstname,
-                          lastname=lastname, fullname=fullname, user_type='is_admin', user_id=user)
-            pro.save()
-        else:
-            user = User(email=email, register_number=reg,
-                        address=address, phone=phone)
-            user = user.save()
-            pro = Profile(standard=request.form['std'], firstname=firstname,
-                          lastname=lastname, fullname=fullname, user_type='is_student', user_id=user)
-            pro.save()
+        # if usertype == 'is_admin' or usertype == 'is_staff':
+        #     if usertype != 'is_admin':
+        #         user = User(email=email, register_number=reg,
+        #                     address=address, phone=phone)
+        #         user = user.save()
+        #         pro = Profile(standard=request.form['std'], firstname=firstname,
+        #                       lastname=lastname, fullname=fullname, user_type='is_staff', user_id=user)
+        #         pro.save()
+        #     user = User(email=email, register_number=reg,
+        #                 address=address, phone=phone)
+        #     user = user.save()
+        #     pro = Profile(standard=request.form['std'], firstname=firstname,
+        #                   lastname=lastname, fullname=fullname, user_type='is_admin', user_id=user)
+        #     pro.save()
+        # else:
+        #     user = User(email=email, register_number=reg,
+        #                 address=address, phone=phone)
+        #     user = user.save()
+        #     pro = Profile(standard=request.form['std'], firstname=firstname,
+        #                   lastname=lastname, fullname=fullname, user_type='is_student', user_id=user)
+        #     pro.save()
     return render_template('signup.html')
 # @token_required
 @views.route('/api/', methods=['GET'])
