@@ -4,7 +4,8 @@ from .extension import mongo
 # from . import app
 # from .models import User, Profile,Token
 from flask import Blueprint, render_template, request,jsonify,make_response
-import jwt
+from bson.json_util import loads,dumps
+
 views = Blueprint('views', __name__)
 @views.route('/')
 def index():
@@ -56,19 +57,11 @@ def signup():
         #     pro.save()
     return render_template('signup.html')
 # @token_required
-@views.route('/api/', methods=['GET'])
+@views.route('/api/', methods=['GET',])
 def api():
-    headers=request.headers
-    print(request.headers)
-    user = User.query.get(1)
-    print(user)
-    print(user.profile.lastname)
-    user = User.query.all()
-    seraialize = UserSerializer(many=True)
-    data = seraialize.dump(user)
-    return data
-
-
+    user=list(mongo.db.users.find({'email':'user@gmail.com'}))
+    stud_json = dumps(user)
+    return stud_json
 @views.route('/users', methods=['GET', 'PUT'])
 def log():
     print(request.user)

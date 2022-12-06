@@ -11,7 +11,7 @@ alembic = Alembic()
 def create_app():
     app=Flask(__name__,template_folder='templates')
     # app.config['SQLALCHEMY_DATABASE_URI'] ='postgresql://postgres:root@localhost/school'
-    app.config['MONGO_URI']='mongodb://localhost:27017/accounts'
+    app.config['MONGO_URI']='mongodb+srv://root:12345@cluster0.kv3gwol.mongodb.net/school'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS']=False
     app.config['DEBUG']=True
     app.app_context().push()
