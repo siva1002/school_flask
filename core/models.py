@@ -10,7 +10,7 @@ class User(Document, UserMixin):
     id = IntField(required=True, primary_key=True)
     email = EmailField(required=True)
     phone = IntField(required=True)
-    
+    registernumber=StringField(required=True)
     is_active = BooleanField(default=True)
     meta = {'collections': 'user'}
 
@@ -26,7 +26,10 @@ class User(Document, UserMixin):
         users = User.objects
         # if users(email__exists=self.email):
         #     raise ValidationError({'error': 'altready exists'})
-        self.id = users.count()
+        if users:
+            self.id = users.count()
+        else:
+            self.id = 0
         print(users)
 
 
@@ -41,14 +44,15 @@ class Token(Document):
 
     def save(self, *args, **kwargs):
         self.token_id = str(uuid.uuid4())
-        super(Token, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
 class Profile(Document):
+    _id=IntField(primary_key=True,required=True)
     firstname = StringField(max_length=50)
     lastname = StringField(max_length=50)
     fullname= StringField(max_length=50)
     usertype = StringField(max_length=10)
     address = StringField(max_length=100)
-    user=ReferenceField(User)
+    user=ReferenceField(User,reverse_delete_rule=CASCADE)
     def _init__(self,firstname,fullname,lastname,usertype,address,user):
       self.fullname=fullname
       self.lastname=lastname
@@ -56,4 +60,13 @@ class Profile(Document):
       self.address=address
       self.firstname = firstname
     meta={'collection': 'profile'}
+    def clean(self):
+        users = Profile.objects
+        # if users(email__exists=self.email):
+        #     raise ValidationError({'error': 'altready exists'})
+        if users:
+            self.id = users.count()
+        else:
+            self.id = 0
+        print(users)
    

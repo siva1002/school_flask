@@ -22,13 +22,14 @@ def create_app():
     app = Flask(__name__, template_folder='templates')
     # app.config['SQLALCHEMY_DATABASE_URI'] ='postgresql://postgres:root@localhost/school'
     app.config['MONGO_URI'] = 'mongodb+srv://root:12345@cluster0.kv3gwol.mongodb.net/school'
+    app.config['SECRET_KEY'] = 'this is token'
     # app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['DEBUG'] = True
     app.app_context().push()
     # mongo.init_app(app)
     # print(mongo)
     connect(
-        host='mongodb+srv://root:YmaXmz16j8AfLi94@cluster1.lcpgfzf.mongodb.net/schooldb'
+        host='mongodb+srv://root:12345@cluster0.kv3gwol.mongodb.net/school'
     )
     app.register_blueprint(views, url_prefix='/')
     login_manager.init_app(app)
