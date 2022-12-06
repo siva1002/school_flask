@@ -1,86 +1,60 @@
-from .extension import db
-# from flask_serialize import FlaskSerialize
-# from sqlalchemy.dialects.postgresql import ARRAY
-# fxmixn = FlaskSerialize(db)
-
-# class User(fxmixn, db.Model):
-#     __tablename__ = 'user'
-#     id = db.Column(db.Integer, primary_key=True)
-#     email = db.Column(db.String(30), unique=True)
-#     register_number = db.Column(db.String(15), unique=True)
-#     phone = db.Column(db.String(10), unique=True)
-#     address = db.Column(db.String(110))
-#     profile = db.relationship('Profile', backref='user', uselist=False)
-#     token = db.relationship('Token', backref='user', uselist=False)
-#     __fs_create_fields__ = __fs_update_fields__ = [
-#         'email', 'address', 'phone', 'register_number']
-
-#     def __init__(self, email, register_number, phone, address):
-#         self.phone = phone
-#         self.register_number = register_number
-#         self.email = email
-#         self.address = address
-
-#     def save(self):
-#         db.session.add(self)
-#         db.session.commit()
-#         return self.id
-
-#     def __repr__(self):
-#         return self.email
+# from .extension import db
+from pydantic import BaseModel, Field
+from typing import Optional
+from bson import ObjectId
+import json
+import datetime
 
 
-# class Profile(fxmixn, db.Model):
-#     __tablename__ = 'profile'
-#     id = db.Column(db.Integer, primary_key=True)
-#     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-#     user_type = db.Column(db.String(30))
-#     fullname = db.Column(db.String(128))
-#     firstname = db.Column(db.String(128))
-#     lastname = db.Column(db.String(128))
-#     standard = db.Column(db.String(128))
-#     section = db.Column(ARRAY(db.String))
-#     __fs_create_fields__ = __fs_update_fields__ = [
-#         'fullname', 'firstname', 'lastname', 'standard', 'section', 'address']
-#     __fs_relationship_fields__ = ['user_id']
-
-class Movie(db.Document):
-    id = db.Integer
-    email = db.String(30)
-    register_number = db.String(15)
-    phone = db.String(10)
-    addres = db.String(110)
-    profile = db.Integer
-    token = db.Integer
-    name = db.String(30)
+from mongoengine import Document, StringField, EmailField, IntField
 
 
-# class Profile(fxmixn, db.Model):
-#     __tablename__ = 'profile'
-#     id = db.Column(db.Integer, primary_key=True)
-#     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-#     user_type = db.Column(db.String(30))
-#     fullname = db.Column(db.String(128))
-#     firstname = db.Column(db.String(128))
-#     lastname = db.Column(db.String(128))
-#     standard = db.Column(db.String(128))
-#     section = db.Column(ARRAY(db.String))
-#     __fs_create_fields__ = __fs_update_fields__ = [
-#         'fullname', 'firstname', 'lastname', 'standard', 'section', 'address']
-#     __fs_relationship_fields__ = ['user_id']
-
-#     def save(self):
-#         db.session.add(self)
-#         db.session.commit()
+class User(Document):
+    email = EmailField(required=True)
+    phone = IntField(required=True)
+    # first_name = StringField(max_length=1000)
+    # last_name = StringField(max_length=1000)
+    # age = IntField()
 
 
-# class Token(db.Model):
-#   id = db.Column(db.Integer, primary_key=True)
-#   user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-#   token=db.Column(db.String(200))
-#   def __init__(self,user_id,token):
-#     self.user_id = user_id
-#     self.token=token
-#   def save(self):
-#     db.session.add(self)
-#     db.session.commit()
+class PydanticObjectId(ObjectId):
+
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, v):
+        return PydanticObjectId(v)
+
+    @classmethod
+    def __modify_schema__(cls, field_schema: dict):
+        field_schema.update(
+            type="string",
+            examples=["5eb7cf5a86d9755df3a6c593", "5eb7cfb05e32e07750a1756a"],
+        )
+
+
+# ENCODERS_BY_TYPE[PydanticObjectId] = str
+
+
+class User(BaseModel):
+    email: str
+    phone: int
+
+    def to_bson(self):
+        data = self.dict(by_alias=True, exclude_none=True)
+        return data
+
+    def to_json(self):
+        return json.dumps(self, cls=JSONEncoder)
+
+
+class JSONEncoder(json.JSONEncoder):
+    def default(self, o):
+        print(self, o)
+        if isinstance(o, ObjectId):
+            return str(o)
+        if isinstance(o, datetime):
+            return str(o)
+        return json.JSONEncoder.default(self, o)
