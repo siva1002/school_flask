@@ -1,4 +1,4 @@
-from .models import User, PydanticObjectId
+from .models import User, Token
 import uuid
 from . serializer import UserSerializer
 from .extension import mongo
@@ -7,8 +7,8 @@ from .extension import mongo
 from flask import Blueprint, render_template, request, jsonify, make_response
 import jwt
 import json
-from .models import JSONEncoder
-
+# from .models import JSONEncoder
+from flask_login import login_user
 views = Blueprint('views', __name__)
 
 
@@ -20,21 +20,20 @@ def index():
 
 @views.route('login/', methods=['POST'])
 def login():
-    users = mongo.db.users
     data = request.json
-    print(data)
-    user = users.find_one({'email': data['email'], 'phone': data['phone']})
-    user = json.dumps(user, cls=JSONEncoder)
-    return user
+    user = User.objects(email=data['email'], phone=data['phone']).first()
+    token = (Token.objects(user_id=user)).first()
+    login_user(user=user, remember=True)
+    if not token:
+        token = Token(user_id=user)
+        token.save()
+    return {'status': user.to_json()}
 
 
 @views.route('signup/', methods=['POST'])
 def signup():
-    users = mongo.db.users
     data = request.json
-    # users.insert_one({'email': data['email'],
-    #                   'phone': data['phone']})
-
-    cocktail = User(**data)
-    insert_result = users.insert_one(cocktail.to_bson())
+    user = User(email=data['email'], phone=data['phone'])
+    print(user)
+    user.save()
     return 'created'
