@@ -122,6 +122,8 @@ class Subject(Document):
         subjects = Subject.objects
         if subjects:
             self.id = subjects.count()
+            self.code=self.name[:3]+str(self.code)
         else:
             self.id = 1
+            self.code=self.name[:4]+str(self.code)
         super(Subject,self).save(*args, **kwargs)
