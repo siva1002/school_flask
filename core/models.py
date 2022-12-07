@@ -32,7 +32,8 @@ class User(Document, UserMixin):
             self.id = 0
         print(users)
 
-
+    def __repr__(self):
+        return self.email
 class Token(Document):
     user_id = ReferenceField(document_type=User, reverse_delete_rule=CASCADE)
     token_id = StringField()
@@ -69,4 +70,6 @@ class Profile(Document):
         else:
             self.id = 0
         print(users)
+    def __repr__(self):
+        return self.fullname
    

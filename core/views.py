@@ -18,7 +18,7 @@ def userdetails():
   "foreignField": 'user',
   "as": 'profile'
 }}]
-    user=db.user.aggregate(pipeline=pipeline)
+    user=User.objects.aggregate(pipeline=pipeline)
     query=list(user)
     data=dumps(query)
     return data
@@ -35,7 +35,7 @@ def login():
         token.save()
     return {'status': user.to_json(),'token':token.token_id}
 
-@views.route('signup/', methods=['POST'])
+@views.route('signup/<int:id>', methods=['POST'])
 def signup():
     try:
         print(request.json)
@@ -48,7 +48,28 @@ def signup():
     except Exception as e:
         print(e)
         return Response(dumps({'message':'not created'}),status=400)
-@views.route('user/<id>',methods=['GET'])
+@views.route('user/<id>',methods=['GET','PATCH'])
 def user(id):
-    user=User.objects.get(pk=id)
-    return user.to_json()
+    pipeline=[{'$match':{'_id':int(id)}},{"$lookup":{
+        "from": "profile",
+        "localField": "_id",
+        "foreignField": 'user',
+        "as": 'profile'
+        }}]
+    if request.method != 'PATCH':
+        try:
+            user=User.objects.aggregate(pipeline=pipeline)
+            print(user)
+            data=dumps(user)
+            print(data)
+            if user:
+                return Response(dumps({'data':data}),status=200)
+        except Exception as e:
+            print(e)
+            return Response(dumps({'message':e}),status=400)
+    try:
+        user=db.user.aggregate(pipeline=pipeline)
+        if user:
+            return Response({'data':data},status=200)
+    except Exception as e:
+        return Response(dumps({'message':e}),status=400)
