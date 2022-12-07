@@ -7,14 +7,18 @@ from flask import Blueprint, render_template, request, jsonify, make_response, R
 from functools import wraps
 from .utils import token_required
 from flask import session
-views = Blueprint('views', __name__)
+accounts = Blueprint('accounts', __name__)
+
+# db connection
 connect(
     host='mongodb+srv://root:12345@cluster0.kv3gwol.mongodb.net/school'
 )
 db = get_db()
 
+# user details
 
-@views.route('/')
+
+@accounts.route('/')
 def userdetails():
     user = loads(session['user'])
     print(user['user_type'])
@@ -39,8 +43,10 @@ def userdetails():
     queryset = dumps(queryset)
     return {'status': 'success', 'data': queryset}
 
+# login
 
-@views.route('login/', methods=['POST'])
+
+@accounts.route('login/', methods=['POST'])
 def login():
     data = request.get_json()
     user = User.objects(email=data['email'], phone=data['phone'])[0]
@@ -55,8 +61,10 @@ def login():
     print(session['token'])
     return Response(dumps({'status': user.to_json(), 'token': token.token_id}), status=200)
 
+# signup
 
-@views.route('signup/', methods=['POST'])
+
+@accounts.route('signup/', methods=['POST'])
 def signup():
     try:
         print(request.json)
@@ -75,7 +83,8 @@ def signup():
         return Response(dumps({'message': 'not created'}), status=400)
 
 
-@views.route('user/<id>', methods=['GET', 'PATCH', 'DELETE'])
+# user id
+@accounts.route('user/<id>', methods=['GET', 'PATCH', 'DELETE'])
 def user(id):
     pipeline = [{'$match': {'_id': int(id)}}, {"$lookup": {
         "from": "profile",
@@ -104,20 +113,10 @@ def user(id):
         return Response(dumps({'status': 'deleted successfully'}), status=200)
 
 
-@views.route('grade/', methods=['POST'])
-def grade():
-    data = request.json
-    try:
-        grade = Grade(grade=data['grade'], section=data['section'])
-        if grade.validate():
-            grade.save()
-            return Response(dumps({'message': f" Grade {data['grade']} Created"}), status=200)
-        return 'Not a valid grade'
-    except Exception as e:
-        return Response(dumps({'message': e}), status=400)
+# logout
 
 
-@views.route('logout/')
+@accounts.route('logout/')
 def logout():
     session['token'] = None
     session['user'] = None
