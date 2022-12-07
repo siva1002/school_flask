@@ -2,10 +2,11 @@ from .models import User, Profile, Token
 from mongoengine import connect, get_db
 from bson.json_util import dumps, loads
 from .extension import mongo
-from .models import User, Token
+from .models import User, Token,Grade
 from flask import Blueprint, render_template, request, jsonify, make_response, Response
 from functools import wraps
 from flask import session
+from . verify import exist
 views = Blueprint('views', __name__)
 connect(
     host='mongodb+srv://root:12345@cluster0.kv3gwol.mongodb.net/school'
@@ -130,6 +131,17 @@ def user(id):
         return Response(dumps({'data': 'Working with patch method'}), status=200)
     except Exception as e:
         return Response(dumps({'message': e}), status=400)
+@views.route('grade/',methods=['POST'])
+def grade():
+    data=request.json
+    try:
+        grade=Grade(grade=data['grade'],section=data['section'])
+        if grade.validate():
+            grade.save()
+            return Response(dumps({'message':f" Grade {data['grade']} Created"}), status=200)
+        return 'Not a valid grade'
+    except Exception as e:
+        return Response(dumps({'message':e}),status=400)
 
 
 @views.route('logout/')
