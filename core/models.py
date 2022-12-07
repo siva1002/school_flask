@@ -1,7 +1,4 @@
-from pydantic import BaseModel, Field
-from typing import Optional
-from bson import ObjectId
-import json
+
 import datetime
 import uuid
 from mongoengine import Document, StringField, EmailField, IntField, ObjectIdField, ValidationError, ReferenceField, CASCADE, BooleanField, DateField,ListField
@@ -13,6 +10,8 @@ class User(Document, UserMixin):
     email = EmailField(required=True)
     phone = IntField(required=True)
     registernumber = StringField(required=True)
+    usertype = StringField(
+        choices={'is-Admin', 'is-Staff', 'is-Student'}, default=None)
     is_active = BooleanField(default=True)
     meta = {'collections': 'user'}
 
@@ -27,8 +26,7 @@ class User(Document, UserMixin):
     def clean(self):
         users = User.objects
         if users:
-            self.id = users.count()
-            # this clean function is rewrite the object id startr with 0
+            self.id = (users[users.count()-1]).id + 1
         else:
             self.id = 0
         print(users)
@@ -70,7 +68,7 @@ class Profile(Document):
         if users:
             self.id = users.count()
         else:
-            self.id = 0
+            self.id = 1
         print(users)
 
 
@@ -94,13 +92,14 @@ class Grade(Document):
         if grades:
             self.id = grades.count()
         else:
-            self.id = 0
+            self.id = 1
         super().save(*args, **kwargs)
    
 
 
 
-class subject(Document):
+class Subject(Document):
+    _id = IntField(primary_key=True, requried=True)
     name = StringField(max_length=20)
     code = IntField()
     grade = ReferenceField(Grade, reverse_delete_rule=CASCADE)
@@ -111,10 +110,18 @@ class subject(Document):
         self.code = code
         self.created_at = created_at
     meta = {'collection': 'subject'}
-
-    def clean(self):
-        subject = subject.objects
-        if subject:
-            self.id = subject.count()
+    def validate(self,clean=False):
+        objects=Subject.objects(name=self.name).first()
+        print(self.to_json())
+        if objects:
+            return False
         else:
-            self.id = 0
+            return True
+
+    def save(self,*args,**kwargs):
+        subjects = Subject.objects
+        if subjects:
+            self.id = subjects.count()
+        else:
+            self.id = 1
+        super(Subject,self).save(*args, **kwargs)
