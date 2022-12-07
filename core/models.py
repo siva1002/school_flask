@@ -4,7 +4,7 @@ from bson import ObjectId
 import json
 import datetime
 import uuid
-from mongoengine import Document, StringField, EmailField, IntField, ObjectIdField, ValidationError, ReferenceField, CASCADE, BooleanField
+from mongoengine import Document, StringField, EmailField, IntField, ObjectIdField, ValidationError, ReferenceField, CASCADE, BooleanField, DateField,ListField
 from flask_login import UserMixin
 
 
@@ -13,10 +13,7 @@ class User(Document, UserMixin):
     email = EmailField(required=True)
     phone = IntField(required=True)
     registernumber = StringField(required=True)
-    user_type = StringField(
-        choice={'is_student', 'is_staff', 'is_admin'}, default=None)
     is_active = BooleanField(default=True)
-
     meta = {'collections': 'user'}
 
     def _init__(self, email, phone, registernumber):
@@ -30,12 +27,11 @@ class User(Document, UserMixin):
     def clean(self):
         users = User.objects
         if users:
-            self.id = (users[users.count()-1]).id + 1
+            self.id = users.count()
+            # this clean function is rewrite the object id startr with 0
         else:
             self.id = 0
-
-    def __repr__(self):
-        return self.email
+        print(users)
 
 
 class Token(Document):
@@ -77,5 +73,48 @@ class Profile(Document):
             self.id = 0
         print(users)
 
-    def __repr__(self):
-        return self.fullname
+
+class Grade(Document):
+    _id = IntField(primary_key=True, requried=True)
+    grade = IntField()
+    section = ListField()
+
+    def _init_(self, grade, section):
+        self.grade = grade
+        self.section = section
+    meta = {'collection': 'grade'}
+    def validate(self,clean=False):
+        objects=Grade.objects(grade=self.grade).first()
+        if objects and objects.grade == self.grade:
+            return False
+        else:
+            return True
+    def save(self,*args,**kwargs):
+        grades = Grade.objects
+        if grades:
+            self.id = grades.count()
+        else:
+            self.id = 0
+        super().save(*args, **kwargs)
+   
+
+
+
+class subject(Document):
+    name = StringField(max_length=20)
+    code = IntField()
+    grade = ReferenceField(Grade, reverse_delete_rule=CASCADE)
+    created_at = DateField(default=datetime)
+
+    def _init_(self, name, code, grade, created_at):
+        self.name = name
+        self.code = code
+        self.created_at = created_at
+    meta = {'collection': 'subject'}
+
+    def clean(self):
+        subject = subject.objects
+        if subject:
+            self.id = subject.count()
+        else:
+            self.id = 0
