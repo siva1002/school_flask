@@ -1,8 +1,6 @@
 from .models import User, Profile, Token
 from mongoengine import connect, get_db
 from bson.json_util import dumps
-from . serializer import UserSerializer
-import uuid
 from .extension import mongo
 from .models import User, Token
 from flask import Blueprint, render_template, request, jsonify, make_response, Response
