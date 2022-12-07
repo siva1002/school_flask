@@ -25,10 +25,10 @@ class User(Document, UserMixin):
 
     def clean(self):
         users = User.objects
-        # if users(email__exists=self.email):
-        #     raise ValidationError({'error': 'altready exists'})
-        self.id = users.count()
-        print(users)
+        if users:
+            self.id = (users[users.count()-1]).id + 1
+        else:
+            self.id = 0
 
 
 class Token(Document):
