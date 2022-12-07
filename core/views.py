@@ -32,6 +32,7 @@ def token_required(f):
 
 
 @views.route('/')
+@token_required
 def userdetails():
     pipeline = [{"$lookup": {
         "from": "profile",
@@ -65,13 +66,15 @@ def index():
     return 'Hello, world'
 
 
-@views.route('signup/<int:id>', methods=['POST'])
+@views.route('signup/', methods=['POST'])
 def signup():
     data = request.json
-    user = User(email=data['email'], phone=data['phone'])
+    user = User(email=data['email'], phone=data['phone'],
+                registernumber=data['registernumber'], user_type=data['user_type'])
     print(user)
+    # if user.validate():
     user.save()
-    return {'user': user}
+    return {'user': user.to_json()}
     # try:
     #     print(request.json)
     #     data = request.json
@@ -91,7 +94,6 @@ def signup():
 @token_required
 def logout():
     session['token'] = None
-    session['user'] = None
     return {'status': 'logged out'}
 
 

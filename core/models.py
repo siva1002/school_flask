@@ -8,12 +8,19 @@ from mongoengine import Document, StringField, EmailField, IntField, ObjectIdFie
 from flask_login import UserMixin
 
 
+# user_type = {
+#     'is_student':
+# }
+
 class User(Document, UserMixin):
     id = IntField(required=True, primary_key=True)
     email = EmailField(required=True)
     phone = IntField(required=True)
     registernumber = StringField(required=True)
+    user_type = StringField(
+        choice={'is_student', 'is_staff', 'is_admin'}, default=None)
     is_active = BooleanField(default=True)
+
     meta = {'collections': 'user'}
 
     def _init__(self, email, phone, registernumber):
