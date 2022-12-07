@@ -34,7 +34,6 @@ def token_required(f):
 
 
 @views.route('/')
-@token_required
 def userdetails():
     user = loads(session['user'])
     print(user['user_type'])
