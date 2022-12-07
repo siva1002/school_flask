@@ -8,10 +8,6 @@ from mongoengine import Document, StringField, EmailField, IntField, ObjectIdFie
 from flask_login import UserMixin
 
 
-# user_type = {
-#     'is_student':
-# }
-
 class User(Document, UserMixin):
     id = IntField(required=True, primary_key=True)
     email = EmailField(required=True)
@@ -61,14 +57,12 @@ class Profile(Document):
     firstname = StringField(max_length=50)
     lastname = StringField(max_length=50)
     fullname = StringField(max_length=50)
-    usertype = StringField(max_length=10)
     address = StringField(max_length=100)
     user = ReferenceField(User, reverse_delete_rule=CASCADE)
 
-    def _init__(self, firstname, fullname, lastname, usertype, address, user):
+    def _init__(self, firstname, fullname, lastname, address, user):
         self.fullname = fullname
         self.lastname = lastname
-        self.usertype = usertype
         self.address = address
         self.firstname = firstname
     meta = {'collection': 'profile'}
