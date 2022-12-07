@@ -31,9 +31,6 @@ def create_app():
     app.app_context().push()
     # mongo.init_app(app)
     # print(mongo)
-    connect(
-        host='mongodb+srv://root:YmaXmz16j8AfLi94@cluster1.lcpgfzf.mongodb.net/schooldb'
-    )
     app.register_blueprint(views, url_prefix='/')
     login_manager.init_app(app)
     app.config["SESSION_PERMANENT"] = False

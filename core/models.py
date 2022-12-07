@@ -1,4 +1,3 @@
-# from .extension import db
 from pydantic import BaseModel, Field
 from typing import Optional
 from bson import ObjectId
@@ -13,12 +12,14 @@ class User(Document, UserMixin):
     id = IntField(required=True, primary_key=True)
     email = EmailField(required=True)
     phone = IntField(required=True)
+    registernumber = StringField(required=True)
     is_active = BooleanField(default=True)
     meta = {'collections': 'user'}
 
-    def _init__(self, email, phone):
+    def _init__(self, email, phone, registernumber):
         self.email = email
         self.phone = phone
+        self.registernumber = registernumber
 
     def get_id(self):
         return self.id
@@ -29,6 +30,9 @@ class User(Document, UserMixin):
             self.id = (users[users.count()-1]).id + 1
         else:
             self.id = 0
+
+    def __repr__(self):
+        return self.email
 
 
 class Token(Document):
@@ -42,14 +46,35 @@ class Token(Document):
 
     def save(self, *args, **kwargs):
         self.token_id = str(uuid.uuid4())
-        super(Token, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
 
-# class JSONEncoder(json.JSONEncoder):
-#     def default(self, o):
-#         print(self, o)
-#         if isinstance(o, ObjectId):
-#             return str(o)
-#         if isinstance(o, datetime):
-#             return str(o)
-#         return json.JSONEncoder.default(self, o)
+class Profile(Document):
+    _id = IntField(primary_key=True, required=True)
+    firstname = StringField(max_length=50)
+    lastname = StringField(max_length=50)
+    fullname = StringField(max_length=50)
+    usertype = StringField(max_length=10)
+    address = StringField(max_length=100)
+    user = ReferenceField(User, reverse_delete_rule=CASCADE)
+
+    def _init__(self, firstname, fullname, lastname, usertype, address, user):
+        self.fullname = fullname
+        self.lastname = lastname
+        self.usertype = usertype
+        self.address = address
+        self.firstname = firstname
+    meta = {'collection': 'profile'}
+
+    def clean(self):
+        users = Profile.objects
+        # if users(email__exists=self.email):
+        #     raise ValidationError({'error': 'altready exists'})
+        if users:
+            self.id = users.count()
+        else:
+            self.id = 0
+        print(users)
+
+    def __repr__(self):
+        return self.fullname
