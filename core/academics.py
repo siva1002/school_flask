@@ -10,7 +10,6 @@ academics = Blueprint('academics', __name__)
 
 @academics.route('grade/', methods=['GET', 'POST'])
 def grade():
-    print('hello world')
     data = request.json
     try:
         grade = Grade(grade=data['grade'], section=data['section'])
