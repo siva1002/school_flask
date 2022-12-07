@@ -2,7 +2,8 @@ from .models import User
 from flask import Flask, render_template, request
 from flask_admin import Admin
 from .extension import mongo
-from . views import views
+from .accounts import accounts
+from .academics import academics
 from flask_cors import CORS
 import datetime
 
@@ -20,7 +21,8 @@ def create_app():
     app.app_context().push()
     # mongo.init_app(app)
     # print(mongo)
-    app.register_blueprint(views, url_prefix='/')
+    app.register_blueprint(accounts, url_prefix='/')
+    app.register_blueprint(academics, url_prefix='/')
     app.config["SESSION_PERMANENT"] = False
     app.config["SESSION_TYPE"] = "filesystem"
     CORS(app)

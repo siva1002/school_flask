@@ -2,38 +2,23 @@ from .models import User, Profile, Token
 from mongoengine import connect, get_db
 from bson.json_util import dumps, loads
 from .extension import mongo
-from .models import User, Token
+from .models import User, Token, Grade
 from flask import Blueprint, render_template, request, jsonify, make_response, Response
 from functools import wraps
+from .utils import token_required
 from flask import session
-views = Blueprint('views', __name__)
+accounts = Blueprint('accounts', __name__)
+
+# db connection
 connect(
     host='mongodb+srv://root:12345@cluster0.kv3gwol.mongodb.net/school'
 )
 db = get_db()
 
-
-def token_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if session['token']:
-            token_id = session['token']
-            print(token_id)
-        else:
-            token_id = ((request.headers['Authorization']).split(' '))[1]
-        token = Token.objects(token_id=token_id).first()
-        user = User.objects(id=token.user_id.id).first()
-        print(user)
-        session['token'] = token_id
-        session['user'] = user.to_json()
-        if not token:
-            return {'data': 'invalid token'}
-        user = token.user_id
-        return f(*args, **kwargs)
-    return decorated_function
+# user details
 
 
-@views.route('/')
+@accounts.route('/')
 def userdetails():
     user = loads(session['user'])
     print(user['user_type'])
@@ -55,16 +40,18 @@ def userdetails():
             0, {'$match': {'_id': int(user['_id'])}})
         queryset = User.objects.aggregate(
             pipeline=pipeline)
-    print(pipeline)
-    print(queryset)
+    queryset = dumps(queryset)
+    return {'status': 'success', 'data': queryset}
 
-    return dumps(queryset)
+# login
 
 
-@views.route('login/', methods=['POST'])
+@accounts.route('login/', methods=['POST'])
 def login():
     data = request.get_json()
     user = User.objects(email=data['email'], phone=data['phone'])[0]
+    if not user:
+        return Response(dumps({'message': "User doesn't Existed"}), status=204)
     token = (Token.objects(user_id=user)).first()
     if not token:
         token = Token(user_id=user)
@@ -72,16 +59,12 @@ def login():
     session["token"] = token.token_id
     session["user"] = user.to_json()
     print(session['token'])
-    return {'status': user.to_json(), 'token': token.token_id}
+    return Response(dumps({'status': user.to_json(), 'token': token.token_id}), status=200)
+
+# signup
 
 
-@views.route('/')
-@token_required
-def index():
-    return 'Hello, world'
-
-
-@views.route('signup/', methods=['POST'])
+@accounts.route('signup/', methods=['POST'])
 def signup():
     try:
         print(request.json)
@@ -100,7 +83,8 @@ def signup():
         return Response(dumps({'message': 'not created'}), status=400)
 
 
-@views.route('user/<id>', methods=['GET', 'PATCH'])
+# user id
+@accounts.route('user/<id>', methods=['GET', 'PATCH', 'DELETE'])
 def user(id):
     pipeline = [{'$match': {'_id': int(id)}}, {"$lookup": {
         "from": "profile",
@@ -108,31 +92,31 @@ def user(id):
         "foreignField": 'user',
         "as": 'profile'
     }}]
-    if request.method != 'PATCH':
-        try:
-            user = list(User.objects.aggregate(pipeline=pipeline))
-            data = dumps(user)
-            if user:
-                return Response(dumps({'data': data}), status=200)
-            return Response(dumps({'message': 'User doesnt Existed'}), status=400)
-        except Exception as e:
-            print(e)
-            return Response(dumps({'message': e}), status=400)
-    try:
-        user = User.objects(id=int(id))
+    user = User.objects(id=int(id))
+    if not user:
+        return Response(dumps({'message': "User doesn't Existed"}), status=400)
+    if request.method == 'GET':
+        user = User.objects.aggregate(pipeline=pipeline)
+        return Response(dumps({'status': 'success', 'data': dumps(user)}), status=200)
+    elif request.method == 'PATCH':
         data = request.json
         print(data)
         user.update(email=data['email'], phone=data['phone'],
-                    registernumber=data['registernumber'])
+                    registernumber=data['registernumber'], user_type=data['user_type'])
         profile = Profile.objects(user=int(id))
         profile.update(fullname=data['fullname'], firstname=data["firstname"],
-                       lastname=data['lastname'], address=data['address'], usertype=data['usertype'])
-        return Response(dumps({'data': 'Working with patch method'}), status=200)
-    except Exception as e:
-        return Response(dumps({'message': e}), status=400)
+                       lastname=data['lastname'], address=data['address'])
+        return Response(dumps({'status': 'updated successfully', 'data': user.to_json()}), status=200)
+
+    elif request.method == 'DELETE':
+        user.delete()
+        return Response(dumps({'status': 'deleted successfully'}), status=200)
 
 
-@views.route('logout/')
+# logout
+
+
+@accounts.route('logout/')
 def logout():
     session['token'] = None
     session['user'] = None
