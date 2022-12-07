@@ -22,12 +22,12 @@ def token_required(f):
         else:
             token_id = ((request.headers['Authorization']).split(' '))[1]
         token = Token.objects(token_id=token_id).first()
+        if not token:
+            return {'data': 'invalid token'}
         user = User.objects(id=token.user_id.id).first()
         print(user)
         session['token'] = token_id
         session['user'] = user.to_json()
-        if not token:
-            return {'data': 'invalid token'}
         user = token.user_id
         return f(*args, **kwargs)
     return decorated_function
@@ -56,10 +56,8 @@ def userdetails():
             0, {'$match': {'_id': int(user['_id'])}})
         queryset = User.objects.aggregate(
             pipeline=pipeline)
-    print(pipeline)
-    print(queryset)
-
-    return dumps(queryset)
+    queryset = dumps(queryset)
+    return {'status': 'success', 'data': queryset}
 
 
 @views.route('login/', methods=['POST'])
@@ -101,7 +99,7 @@ def signup():
         return Response(dumps({'message': 'not created'}), status=400)
 
 
-@views.route('user/<id>', methods=['GET', 'PATCH'])
+@views.route('user/<id>', methods=['GET', 'PATCH', 'DELETE'])
 def user(id):
     pipeline = [{'$match': {'_id': int(id)}}, {"$lookup": {
         "from": "profile",
@@ -109,28 +107,25 @@ def user(id):
         "foreignField": 'user',
         "as": 'profile'
     }}]
-    if request.method != 'PATCH':
-        try:
-            user = list(User.objects.aggregate(pipeline=pipeline))
-            data = dumps(user)
-            if user:
-                return Response(dumps({'data': data}), status=200)
-            return Response(dumps({'message': 'User doesnt Existed'}), status=400)
-        except Exception as e:
-            print(e)
-            return Response(dumps({'message': e}), status=400)
-    try:
-        user = User.objects(id=int(id))
+    user = User.objects(id=int(id))
+    if not user:
+        return Response({'message': "User doesn't Existed"}, status=400)
+    if request.method == 'GET':
+        user = User.objects.aggregate(pipeline=pipeline)
+        return Response(dumps({'status': 'success', 'data': dumps(user)}), status=200)
+    elif request.method == 'PATCH':
         data = request.json
         print(data)
         user.update(email=data['email'], phone=data['phone'],
-                    registernumber=data['registernumber'])
+                    registernumber=data['registernumber'], user_type=data['user_type'])
         profile = Profile.objects(user=int(id))
         profile.update(fullname=data['fullname'], firstname=data["firstname"],
-                       lastname=data['lastname'], address=data['address'], usertype=data['usertype'])
-        return Response(dumps({'data': 'Working with patch method'}), status=200)
-    except Exception as e:
-        return Response(dumps({'message': e}), status=400)
+                       lastname=data['lastname'], address=data['address'])
+        return Response(dumps({'status': 'updated successfully', 'data': user.to_json()}), status=200)
+
+    elif request.method == 'DELETE':
+        user.delete()
+        return Response(dumps({'status': 'deleted successfully'}), status=200)
 
 
 @views.route('logout/')
