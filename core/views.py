@@ -40,6 +40,7 @@ def signup():
     try:
         print(request.json)
         data= request.json
+    
         user=User(email=data['email'],phone=data['phone'],registernumber=data['registernumber'])
         user.save()
         profile=Profile(fullname=data['fullname'],firstname=data["firstname"],lastname=data['lastname'],address=data['address'],usertype=data['usertype'],user=user)
@@ -58,18 +59,21 @@ def user(id):
         }}]
     if request.method != 'PATCH':
         try:
-            user=User.objects.aggregate(pipeline=pipeline)
-            print(user)
+            user=list(User.objects.aggregate(pipeline=pipeline))
             data=dumps(user)
-            print(data)
-            if user:
+            if user :
                 return Response(dumps({'data':data}),status=200)
+            return Response(dumps({'message':'User doesnt Existed'}),status=400)
         except Exception as e:
             print(e)
             return Response(dumps({'message':e}),status=400)
     try:
-        user=db.user.aggregate(pipeline=pipeline)
-        if user:
-            return Response({'data':data},status=200)
+        user=User.objects(id=int(id))
+        data=request.json
+        print(data)
+        user.update(email=data['email'],phone=data['phone'],registernumber=data['registernumber'])
+        profile=Profile.objects(user=int(id))
+        profile.update(fullname=data['fullname'],firstname=data["firstname"],lastname=data['lastname'],address=data['address'],usertype=data['usertype'])
+        return Response(dumps({'data':'Working with patch method'}),status=200)
     except Exception as e:
         return Response(dumps({'message':e}),status=400)
