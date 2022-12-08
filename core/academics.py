@@ -65,7 +65,7 @@ def chapter():
             if not subject:
                 return Response(dumps({'status': 'failure', 'data': "subject doesn't exists"}))
             chapter = Chapter(name=data['name'], chapter_no=data['chapter_no'],
-                              description=data['description'], subject_id=subjects.id)
+                              description=data['description'], subject_id=subjects)
             chapter.save()
         except Exception as e:
             return Response(dumps({'message': str(e)}))
