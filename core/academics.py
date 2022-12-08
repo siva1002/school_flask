@@ -28,10 +28,9 @@ def subject():
     try:
         query = Subject(name=data['name'],
                         code=data['code'], grade=data['grade_id'])
-        if query.validate():
-            query.save()
-            return Response(dumps({'message': f"{data['name']} Created"}), status=200)
-        return Response(dumps({'message': "Not Created"}), status=404)
+        query.save()
+        return Response(dumps({'message': f"{data['name']} Created"}), status=200)
+        # return Response(dumps({'message': "Not Created"}), status=404)
     except Exception as e:
         return Response(dumps({'message': str(e)}), status=400)
 
@@ -44,6 +43,8 @@ def chapter():
         print(data)
         try:
             subject = Subject.objects(id=data['subject_id']).first()
+            if not subject:
+                return Response(dumps({'status': 'failure', 'data': "subject doesn't exists"}))
             chapter = Chapter(name=data['name'], chapter_no=data['chapter_no'],
                               description=data['description'], subject_id=subject)
             chapter.save()
@@ -77,3 +78,24 @@ def chapter_edit(id):
     if request.method == "DELETE":
         chapter.delete()
         return Response(dumps({'status': 'success', 'data': 'chapter {} deleted successfully'.format(chapter.name)}))
+
+
+@academics.route('chapter-list', methods=['POST'])
+def chapter_list():
+    data = request.json
+    grade = Grade.objects(grade=data['grade']).get()
+    if not grade:
+        return Response(dumps({'status': 'failure', 'data': "grade doesn't exists"}))
+    subject = Subject.objects(grade=str(grade.id),
+                              name=data['subject']).first()
+    if not subject:
+        return Response(dumps({'status': 'failure', 'data': "subject doesn't exists"}))
+    chapters = Chapter.objects(subject_id=subject)
+    if not len(chapters):
+        return Response(dumps({'status': 'failure', 'data': "subject doesn't have chapters"}))
+    chapters = loads(chapters.to_json())
+    for chapter in chapters:
+        chapter['grade'] = grade.grade
+        chapter['subject'] = subject.name
+        chapter['subject_id'] = subject.id
+    return Response(dumps({'status': 'success', 'data': chapters}))
