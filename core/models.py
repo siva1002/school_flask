@@ -79,16 +79,18 @@ class Subject(Document):
     def validate(self, clean=True):
         objects = Subject.objects
         if objects:
-            objects = Subject.objects(name=self.name, grade=self.grade).first()
-            print(objects)
-            code = Subject.objects(
-                code=(self.name[:3]+str(self.code)).upper()).first()
-            if objects:
+            code = Subject.objects(code=(str(self.name[:3]).upper()+str(self.code)).upper())
+            subject= Subject.objects(grade=self.grade,name=self.name)
+            print(self.code,'new')
+            if subject:
+                print(subject.to_json())
                 raise ValidationError(
                     message='Subject already exists for this grade')
             if code:
+                print(code.to_json())
                 raise ValidationError(
                     message='Code already exists give another one')
+            
         else:
             return True
 
@@ -98,6 +100,7 @@ class Subject(Document):
             self.code = (self.name[:3]+str(self.code)).upper()
             self.name = str(self.name).upper()
         else:
+            self.name = str(self.name).upper()
             self.code = (self.name[:3]+str(self.code)).upper()
         super().save(*args, **kwargs)
     # def update(self,*args, **kwargs,):
