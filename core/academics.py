@@ -21,19 +21,37 @@ def grade():
     except Exception as e:
         return Response(dumps({'message': e}), status=400)
 
-
+@academics.route('subject/<id>',methods=['PATCH'])
 @academics.route('subject/', methods=['POST'])
-def subject():
-    data = request.json
-    try:
-        query = Subject(name=data['name'],
-                        code=data['code'], grade=data['grade_id'])
-        if query.validate():
+def subject(id=None):
+    if request.method=='POST':
+        data = request.json
+        # try:
+        query = Subject(name=data['name'],code=data['code'],grade=data['grade'])
+        try:
             query.save()
             return Response(dumps({'message': f"{data['name']} Created"}), status=200)
-        return Response(dumps({'message': "Not Created"}), status=404)
-    except Exception as e:
-        return Response(dumps({'message': str(e)}), status=400)
+        except Exception as e:
+            return Response(dumps({'message': str(e)}), status=404)
+
+    if request.method=='PATCH':
+        data=request.json
+        # try:
+        print(id)
+        query = Subject.objects(id=int(id))
+        print(query.to_json())
+        if query:
+            try:
+                code=Subject.objects(code=str(data['code'])).first()
+                if code.name==data['name']:
+                    query.update(name=data['name'], code=data['code'])
+                    return Response(dumps({'message': f"Subject {code.name} updated"}), status=400)
+                else:
+                    return Response(dumps({'message':f' {code.name} Subject code already exists'}), status=404)
+               
+            except Exception as e:
+                print(e)
+                return Response(dumps({'message':str(e)}), status=400)
 
 
 @academics.route('chapter/', methods=['GET', 'POST'])
