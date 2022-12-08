@@ -22,7 +22,6 @@ class User(Document, UserMixin):
         choices={'is-Admin', 'is-Staff', 'is-Student'}, default=None)
     is_active = BooleanField(default=True)
     meta = {'collections': 'user'}
-
     def get_id(self):
         return self.id
 
@@ -41,7 +40,6 @@ class Token(Document):
     user_id = ReferenceField(document_type=User, reverse_delete_rule=CASCADE)
     token_id = StringField()
     meta = {'collections': 'token'}
-
     def save(self, *args, **kwargs):
         self.token_id = str(uuid.uuid4())
         super().save(*args, **kwargs)
@@ -54,7 +52,6 @@ class Profile(Document):
     fullname = StringField(max_length=50)
     address = StringField(max_length=100)
     user = ReferenceField(User, reverse_delete_rule=CASCADE)
-
     meta = {'collection': 'profile'}
 
 
@@ -62,7 +59,6 @@ class Grade(Document):
     id = SequenceField(primary_key=True)
     grade = IntField()
     section = ListField()
-
     meta = {'collection': 'grade'}
 
     def validate(self, clean=False):
@@ -78,13 +74,14 @@ class Subject(Document):
     name = StringField(max_length=20)
     code = StringField(max_length=20)
     grade = ReferenceField(Grade, reverse_delete_rule=CASCADE, dbref=True)
-    created_at = DateField(default=datetime)
+    created_at = DateField(default=datetime.datetime.now())
     meta = {'collection': 'subject'}
 
-    def validate(self, clean=False):
-        objects = Subject.objects()
+    def validate(self, clean=True):
+        objects = Subject.objects
         if objects:
-            objects = Subject.objects(name=self.name, grade=self.grade).first()
+            objects = Subject.objects(name=self.name , grade=self.grade).first()
+            print(objects)
             code = Subject.objects(
                 code=(self.name[:3]+str(self.code)).upper()).first()
             if objects:
@@ -100,9 +97,15 @@ class Subject(Document):
         subjects = Subject.objects
         if subjects:
             self.code = (self.name[:3]+str(self.code)).upper()
+            self.name=str(self.name).upper()
         else:
-            self.code = self.name[:3]+str(self.code)
+            self.code = (self.name[:3]+str(self.code)).upper()
         super().save(*args, **kwargs)
+    def update(self, **kwargs,):
+        code=Subject.object(code=str(self.code).upper())
+        if code:
+            return ValidationError(f"Code existed for{code.name} give another one")
+        return super().update(**kwargs)
 
 
 class Chapter(Document):
@@ -115,11 +118,11 @@ class Chapter(Document):
     created_at = DateTimeField(default=datetime.datetime.now())
     meta = {'collection': 'chapters'}
 
-    def validate(self, clean=False):
-        chapters = Chapter.objects(subject_id=self.subject_id)
-        print(chapters)
-        if self.id:
-            chapters = chapters(id__ne=self.id)
+    def validate(self, clean=True):
+        subject = Subject.objects(id=self.subject_id).first()
+        chapters = Chapter.objects(subject_id=subject)
+        if not subject:
+            raise ValidationError(message="subject dosn't exists")
         if chapters(chapter_no=self.chapter_no):
             raise ValidationError(message="chapter no in this altready exists")
         if chapters(name=self.name):
