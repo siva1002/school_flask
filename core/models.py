@@ -32,13 +32,6 @@ class User(Document, UserMixin):
     def get_id(self):
         return self.id
 
-    def clean(self):
-        users = User.objects
-        if users:
-            self.id = (users[users.count()-1]).id + 1
-        else:
-            self.id = 0
-        print(users)
 
     def validate(self, clean=True):
         user = User.objects
@@ -80,15 +73,6 @@ class Profile(Document):
         self.firstname = firstname
     meta = {'collection': 'profile'}
 
-    def clean(self):
-        users = Profile.objects
-        if users:
-            self.id = users.count()
-        else:
-            self.id = 1
-        print(users)
-
-
 class Grade(Document):
     id = SequenceField(primary_key=True)
     grade = IntField()
@@ -122,15 +106,14 @@ class Subject(Document):
 
     def validate(self, clean=False):
         objects = Subject.objects()
-        print(objects)
-        print(self.to_json())
         if objects:
             objects = Subject.objects(name=self.name, grade=self.grade).first()
             code = Subject.objects(
                 code=(self.name[:3]+str(self.code)).upper()).first()
-            if objects or code:
-                return False
-            return True
+            if objects:
+                raise ValidationError(message='Subject already exists for this grade')
+            if code:
+                raise ValidationError(message='Code already exists give another one')
         else:
             return True
 

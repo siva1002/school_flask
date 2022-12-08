@@ -7,8 +7,6 @@ from .models import Chapter
 academics = Blueprint('academics', __name__)
 
 # grade
-
-
 @academics.route('grade/', methods=['POST'])
 def grade():
     data = request.json
@@ -37,7 +35,7 @@ def subject():
 
 
 @academics.route('chapter/', methods=['POST'])
-@token_required
+# @token_required
 def chapter():
     data = request.json
     chapter = Chapter(name=data['name'], chapter_no=data['chapter_no'],
