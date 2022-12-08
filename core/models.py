@@ -1,14 +1,11 @@
-import uuid
-from flask_login import UserMixin
-from pydantic import BaseModel, Field
-from typing import Optional
-from bson import ObjectId
-import json
-import datetime
-import uuid
 from mongoengine import Document, SequenceField, StringField, EmailField, IntField, ObjectIdField, ValidationError, ReferenceField, CASCADE, BooleanField, DateField, ListField, DateTimeField
-from flask_login import UserMixin
 import datetime
+import json
+from bson import ObjectId
+from typing import Optional
+from pydantic import BaseModel, Field
+from flask_login import UserMixin
+import uuid
 
 
 class User(Document, UserMixin):
@@ -22,6 +19,7 @@ class User(Document, UserMixin):
         choices={'is-Admin', 'is-Staff', 'is-Student'}, default=None)
     is_active = BooleanField(default=True)
     meta = {'collections': 'user'}
+
     def get_id(self):
         return self.id
 
@@ -40,6 +38,7 @@ class Token(Document):
     user_id = ReferenceField(document_type=User, reverse_delete_rule=CASCADE)
     token_id = StringField()
     meta = {'collections': 'token'}
+
     def save(self, *args, **kwargs):
         self.token_id = str(uuid.uuid4())
         super().save(*args, **kwargs)
@@ -80,7 +79,7 @@ class Subject(Document):
     def validate(self, clean=True):
         objects = Subject.objects
         if objects:
-            objects = Subject.objects(name=self.name , grade=self.grade).first()
+            objects = Subject.objects(name=self.name, grade=self.grade).first()
             print(objects)
             code = Subject.objects(
                 code=(self.name[:3]+str(self.code)).upper()).first()
@@ -97,7 +96,7 @@ class Subject(Document):
         subjects = Subject.objects
         if subjects:
             self.code = (self.name[:3]+str(self.code)).upper()
-            self.name=str(self.name).upper()
+            self.name = str(self.name).upper()
         else:
             self.code = (self.name[:3]+str(self.code)).upper()
         super().save(*args, **kwargs)
@@ -129,3 +128,17 @@ class Chapter(Document):
             raise ValidationError(
                 message="this subject has the chapter in this name altready")
         return super().validate(clean)
+
+
+class Question(Document):
+    id = SequenceField(primary_key=True)
+    grade = ReferenceField(Grade, reverse_delete_rule=CASCADE)
+    subjec = ReferenceField(Subject, reverse_delete_rule=CASCADE)
+    chapter = ReferenceField(Chapter, reverse_delete_rule=CASCADE)
+    question = StringField(max_length=100)
+    duration = IntField(min_value=0)
+    marks = IntField()
+    chapter_no = IntField()
+    created_at = DateField(default=datetime.datetime.now())
+    question_type = StringField(max_length=30)
+    meta = {'collection': 'questions'}
