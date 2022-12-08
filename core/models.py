@@ -23,15 +23,8 @@ class User(Document, UserMixin):
     is_active = BooleanField(default=True)
     meta = {'collections': 'user'}
 
-    def _init__(self, email, phone, registernumber, user_type):
-        self.email = email
-        self.phone = phone
-        self.registernumber = registernumber
-        self.user_type = user_type
-
     def get_id(self):
         return self.id
-
 
     def validate(self, clean=True):
         user = User.objects
@@ -49,10 +42,6 @@ class Token(Document):
     token_id = StringField()
     meta = {'collections': 'token'}
 
-    def _init__(self, user_id, token_id):
-        self.user_id = user_id
-        self.token_id = token_id
-
     def save(self, *args, **kwargs):
         self.token_id = str(uuid.uuid4())
         super().save(*args, **kwargs)
@@ -66,21 +55,14 @@ class Profile(Document):
     address = StringField(max_length=100)
     user = ReferenceField(User, reverse_delete_rule=CASCADE)
 
-    def _init__(self, firstname, fullname, lastname, address):
-        self.fullname = fullname
-        self.lastname = lastname
-        self.address = address
-        self.firstname = firstname
     meta = {'collection': 'profile'}
+
 
 class Grade(Document):
     id = SequenceField(primary_key=True)
     grade = IntField()
     section = ListField()
 
-    def _init_(self, grade, section):
-        self.grade = grade
-        self.section = section
     meta = {'collection': 'grade'}
 
     def validate(self, clean=False):
@@ -97,11 +79,6 @@ class Subject(Document):
     code = StringField(max_length=20)
     grade = ReferenceField(Grade, reverse_delete_rule=CASCADE, dbref=True)
     created_at = DateField(default=datetime)
-
-    def _init_(self, name, code, created_at):
-        self.name = name
-        self.code = code
-        self.created_at = created_at
     meta = {'collection': 'subject'}
 
     def validate(self, clean=False):
@@ -111,9 +88,11 @@ class Subject(Document):
             code = Subject.objects(
                 code=(self.name[:3]+str(self.code)).upper()).first()
             if objects:
-                raise ValidationError(message='Subject already exists for this grade')
+                raise ValidationError(
+                    message='Subject already exists for this grade')
             if code:
-                raise ValidationError(message='Code already exists give another one')
+                raise ValidationError(
+                    message='Code already exists give another one')
         else:
             return True
 
@@ -130,26 +109,20 @@ class Chapter(Document):
     id = SequenceField(primary_key=True)
     name = StringField(max_length=30)
     chapter_no = IntField(min_value=0)
-    subject_id = ReferenceField(Subject, reverse_delete_rule=CASCADE)
+    subject_id = ReferenceField(
+        Subject, reverse_delete_rule=CASCADE, dbref=True)
     description = StringField(max_length=50)
     created_at = DateTimeField(default=datetime.datetime.now())
     meta = {'collection': 'chapters'}
 
-    def _init_(self, name, chapter_no, subject_id, description):
-        self.name = name
-        self.chapter_no = chapter_no
-        self.description = description
-        self.subject_id = subject_id
-
-    def validate(self, clean=True):
-        subject = Subject.objects(id=self.subject_id).first()
-        chapters = Chapter.objects(subject_id=subject)
-        if not subject:
-            raise ValidationError(message="subject dosn't exists")
+    def validate(self, clean=False):
+        chapters = Chapter.objects(subject_id=self.subject_id)
+        print(chapters)
+        if self.id:
+            chapters = chapters(id__ne=self.id)
         if chapters(chapter_no=self.chapter_no):
             raise ValidationError(message="chapter no in this altready exists")
         if chapters(name=self.name):
             raise ValidationError(
                 message="this subject has the chapter in this name altready")
-        self.subject_id = subject
         return super().validate(clean)
