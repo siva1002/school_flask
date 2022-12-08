@@ -16,30 +16,31 @@ connect(
 db = get_db()
 
 # user details
+pipeline = [{"$lookup": {
+    "from": "profile",
+    "localField": "_id",
+    "foreignField": 'user',
+    "as": 'profile'
+}}]
 
 
 @accounts.route('/')
 def userdetails():
     user = loads(session['user'])
     print(user['user_type'])
-    pipeline = [{"$lookup": {
-        "from": "profile",
-        "localField": "_id",
-        "foreignField": 'user',
-        "as": 'profile'
-    }}]
+    user_pipeline = pipeline
     if user['user_type'] == 'is_admin':
-        queryset = User.objects.aggregate(pipeline=pipeline)
+        queryset = User.objects.aggregate(pipeline=user_pipeline)
     elif user['user_type'] == 'is_staff':
-        pipeline.insert(
+        user_pipeline.insert(
             0, {'$match': {'user_type': 'is_student'}})
         queryset = User.objects.aggregate(
-            pipeline=pipeline)
+            pipeline=user_pipeline)
     else:
-        pipeline.insert(
+        user_pipeline.insert(
             0, {'$match': {'_id': int(user['_id'])}})
         queryset = User.objects.aggregate(
-            pipeline=pipeline)
+            pipeline=user_pipeline)
     queryset = dumps(queryset)
     return {'status': 'success', 'data': queryset}
 
@@ -72,31 +73,28 @@ def signup():
 
         user = User(email=data['email'], phone=data['phone'],
                     registernumber=data['registernumber'], user_type=data['user_type'])
-
         user.save()
         profile = Profile(fullname=data['fullname'], firstname=data["firstname"],
                           lastname=data['lastname'], address=data['address'], user=user)
+        for i in profile:
+            print(i)
         profile.save()
         return Response(dumps({'message': 'created'}), status=200)
     except Exception as e:
         print(e, 'error')
-        return Response(dumps({'message': 'not created'}), status=400)
+        return Response(dumps({'message': str(e)}), status=400)
 
 
 # user id
 @accounts.route('user/<id>', methods=['GET', 'PATCH', 'DELETE'])
 def user(id):
-    pipeline = [{'$match': {'_id': int(id)}}, {"$lookup": {
-        "from": "profile",
-        "localField": "_id",
-        "foreignField": 'user',
-        "as": 'profile'
-    }}]
+    user_pipeline = pipeline
+    user_pipeline = user_pipeline.insert(0, {'$match': {'_id': int(id)}})
     user = User.objects(id=int(id))
     if not user:
         return Response(dumps({'message': "User doesn't Existed"}), status=400)
     if request.method == 'GET':
-        user = User.objects.aggregate(pipeline=pipeline)
+        user = User.objects.aggregate(pipeline=user_pipeline)
         return Response(dumps({'status': 'success', 'data': dumps(user)}), status=200)
     elif request.method == 'PATCH':
         data = request.json
@@ -121,3 +119,13 @@ def logout():
     session['token'] = None
     session['user'] = None
     return {'status': 'logged out'}
+
+
+@accounts.route('profile/', methods=['GET'])
+@token_required
+def profile():
+    user = loads(session['user'])
+    user_pipeline = pipeline
+    user_pipeline.insert(0, {'$match': {'_id': int(user['_id'])}})
+    user = User.objects.aggregate(pipeline=user_pipeline)
+    return Response(dumps({'status': 'success', 'data': dumps(user)}), status=200)

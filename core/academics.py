@@ -1,11 +1,14 @@
 from flask import Blueprint, request, Response, jsonify
 from json import dumps, loads
 from .models import *
-
+from .utils import token_required
+from .models import Chapter
 
 academics = Blueprint('academics', __name__)
 
 # grade
+
+
 @academics.route('grade/', methods=['POST'])
 def grade():
     data = request.json
@@ -17,86 +20,78 @@ def grade():
         return 'Not a valid grade'
     except Exception as e:
         return Response(dumps({'message': e}), status=400)
-@academics.route('subject/',methods=['POST'])  
-def sub():
-    data = request.json
-    try:
-        subject = Subject(name=data['name'],grade=data['grade'],
-        code=data['code'],created_at=data['created_at']) 
-        subject.save()
-        return Response(dumps({'message':f"Subject{data['code']}created"}),status=200)
-    except Exception as e:
-        return Response(dumps({'message':e}),status=404) 
-@academics.route('update<pk>/',methods = ['PATCH','DELETE'])
-def updatedsub(id):
-    subject = Subject.objects(id=int(id))
-    if request.methods == 'PATCH':
+
+@academics.route('subject/<id>',methods=['PATCH'])
+@academics.route('subject/', methods=['POST'])
+def subject(id=None):
+    if request.method=='POST':
         data = request.json
-        subject.update(name=data['name'],code = data['code'],created_at = data['created_at'])
-        return Response(dumps({'message':'sucessfull','data':subject.to_json()}),status=200)
-    elif request.methods =='DELETE':
-        subject.delete()
-    return Response(dumps({'message':'deleted'}),status=200)
-@academics.route('question/',methods =['POST']) 
-def question():
-    data=request.json
-    try:
-        questions = Question(grade=data['grade'],subject=data['subjects'],chapter=data['chapter'],
-        question=data['question'],mark=data['mark'],
-        chapter_no=data['chapter_no'],question_type=data['question_type'],duration=data['duration'])
-        if questions.validate():
-            questions.save()
-            return Response(dumps({'message':'created'}),status=200)
-    except Exception as e:
-        return Response(dumps({'message':e}),status=400)
-@academics.route('update<pk>/',methods=['PATCH','DELETE'])        
-def updatequestion(id):
-    question = Question.object(id=int(id))
-    if request.methods == 'PATCH':
+        # try:
+        query = Subject(name=data['name'],code=data['code'],grade=data['grade'])
+        try:
+            query.save()
+            return Response(dumps({'message': f"{data['name']} Created"}), status=200)
+        except Exception as e:
+            return Response(dumps({'message': str(e)}), status=404)
+
+    if request.method=='PATCH':
+        data=request.json
+        # try:
+        print(id)
+        query = Subject.objects(id=int(id))
+        print(query.to_json())
+        if query:
+            try:
+                code=Subject.objects(code=str(data['code'])).first()
+                if code.name==data['name']:
+                    query.update(name=data['name'], code=data['code'])
+                    return Response(dumps({'message': f"Subject {code.name} updated"}), status=400)
+                else:
+                    return Response(dumps({'message':f' {code.name} Subject code already exists'}), status=404)
+               
+            except Exception as e:
+                print(e)
+                return Response(dumps({'message':str(e)}), status=400)
+
+
+@academics.route('chapter/', methods=['GET', 'POST'])
+# @token_required
+def chapter():
+    if request.method == "POST":
         data = request.json
-        question.update(grade=data['grade'],subject=data['subjects'],chapter=data['chapter'],
-        question=data['question'],duration=data['duration'],mark=data['mark'],
-        chapter_no=data['chapter_no'],created_at=data['created_at'],question_type=data['question_type'])
-        return Response(dumps({'message':'updated','data':question.to_json()}),status=200)
-    elif  request.methods =='DELETE':
-        question.delete()
-        return Response(dumps({'message':'deleted'}),status=200)
+        print(data)
+        try:
+            subject = Subject.objects(id=data['subject_id']).first()
+            chapter = Chapter(name=data['name'], chapter_no=data['chapter_no'],
+                              description=data['description'], subject_id=subject)
+            chapter.save()
+        except Exception as e:
+            return Response(dumps({'message': str(e)}))
+        return Response(dumps({'message': f"{data['name']} Created"}))
+    if request.method == "GET":
+        chapters = Chapter.objects
+        print(chapters)
+        return Response(dumps({'status': 'success', 'data': chapters.to_json()}), status=200)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#     data = request.json
-#     try:
-#         subjets = Subject.update.one({'id':ObjectId(id)},
-#         {"$set":{'code':request.form['code']},{'name':request.form['name']},{'created_at':request.form['created_at']}})
-#     except Exception as e:
-#         return Response (dumps({'message':e}),status=404,mimetype='application/json')
-# @academics.route('delete<pk>',methods = ['DELETE'])
-# def deletesub(id):
-#    try:
-#     deletesubject = Subject.delete.one({'id':ObjectId(id)})
-#     return Response(dumps{'message':"id delete",'id':f'id'{id}},status=404,mimetype='application/json')
-#    except Exception as e:
-#     return Response (dumps({'message':e}),status=404,mimetype='application/json')
-
-    
-    
-    
-       
-
-
+@academics.route('chapter/<id>/', methods=['PATCH', "DELETE"])
+def chapter_edit(id):
+    chapter = Chapter.objects(id=id).first()
+    if not chapter:
+        return Response(dumps({'status': 'failure', 'data': "chapter doesn't exists"}))
+    if request.method == "PATCH":
+        data = request.json
+        print(data)
+        try:
+            for key in data:
+                print(key)
+                setattr(chapter, key, data[key])
+            chapter.save()
+            print(chapter)
+        except Exception as e:
+            print(str(e))
+            return Response(dumps({'status': 'failure', 'data': str(e)}))
+        return Response(dumps({'status': 'success', 'data': chapter.to_json()}))
+    if request.method == "DELETE":
+        chapter.delete()
+        return Response(dumps({'status': 'success', 'data': 'chapter {} deleted successfully'.format(chapter.name)}))
