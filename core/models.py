@@ -87,37 +87,31 @@ class Chpaters(Document):
     description = StringField(max_length=40)
     chapter_no = IntField()  
     meta = {'collection':'chpaters'}   
-    def clean(self):
-        chapters = Chpaters.objects()
-        if chapters:
-            self.id = Chpaters.count()
-        else:
-            self.id = 0
+    
     def save(self,*args,**kwargs):
         chpaters = Chpaters.objects()
         if chpaters:
-             self.id = chpaters.count()
         else:
             self.id = 0
         super.save(*args,**kwargs)            
                    
 class Question(Document):
    grade = ReferenceField(Grade, reverse_delete_rule=CASCADE)
-   subjets = ReferenceField(Subject, reverse_delete_rule=CASCADE)
-   chapters = ReferenceField(Chpaters,reverse_delete_rule=CASCADE)
-   questions = StringField(max_length=100)
-   duration = DateTimeField(default=datetime)
+   subject = ReferenceField(Subject, reverse_delete_rule=CASCADE)
+   chapter = ReferenceField(Chpaters,reverse_delete_rule=CASCADE)
+   question = StringField(max_length=100)
+   duration = IntField()
    mark = IntField()
    chapter_no = IntField()
    created_at = DateField(default=datetime.datetime.now())
-   question_type = StringField(max_length=30, )
-#    def __init__(self,grade,subjects,chapters,questions,
-#       duration,mark,chapdter_no,created_at,question_type):
-#       self.duration = duration
-#       self.mark = mark
-#       self.chapter_no = chapdter_no
-#       self.question_type = question_type
-#       self.created_at = created_at
+   question_type = StringField(max_length=20,choies={ 
+        'choices'='questiontype_choice',
+        'default=questiontype_choice[0][0]'} )
+   congitive_level =  StringField(max_length=20,choies={
+    'choieces'='congitive_level',
+    'default'='congitive_choice[0][0]'
+   }) 
+   difficulty_level = StringField(max_length=20,choies=)  
    meta = {'collection':'questions'}  
    def clean(self):
        question = Question.objects()

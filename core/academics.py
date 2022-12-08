@@ -43,7 +43,7 @@ def question():
     try:
         questions = Question(grade=data['grade'],subject=data['subjects'],chapter=data['chapter'],
         question=data['question'],mark=data['mark'],
-        chapter_no=data['chapter_no'],question_type=data['question_type'])
+        chapter_no=data['chapter_no'],question_type=data['question_type'],duration=data['duration'])
         if questions.validate():
             questions.save()
             return Response(dumps({'message':'created'}),status=200)
