@@ -4,7 +4,7 @@ from bson import ObjectId
 import json
 import datetime
 import uuid
-from mongoengine import Document, StringField, EmailField, IntField, ObjectIdField, ValidationError, ReferenceField, CASCADE, BooleanField, DateField,ListField
+from mongoengine import Document, StringField, EmailField, IntField, ObjectIdField,ValidationError, ReferenceField, CASCADE, BooleanField, DateField,ListField,DateTimeField
 from flask_login import UserMixin
 
 
@@ -96,11 +96,7 @@ class Grade(Document):
         else:
             self.id = 0
         super().save(*args, **kwargs)
-   
-
-
-
-class subject(Document):
+class Subject(Document):
     name = StringField(max_length=20)
     code = IntField()
     grade = ReferenceField(Grade, reverse_delete_rule=CASCADE)
@@ -118,3 +114,68 @@ class subject(Document):
             self.id = subject.count()
         else:
             self.id = 0
+    def save(self,*args,**kwargs):
+        subject = Subject.objects
+        if subject:
+            self.id = Subject.count()
+            self.code = self.code[:3]+str(self.code)
+        else:
+            self.id = 1
+            self.code = self.name[:4]+str(self.code)
+        super(Subject,self).save(*args,**kwargs)  
+class Chpaters(Document):
+    subject = ReferenceField(Subject,reverse_delete_rule=CASCADE)
+    description = StringField(max_length=40)
+    chapter_no = IntField()  
+    def _init_(self,subject,description,chapter_no):
+       self.subject = subject   
+       self.description = description
+       self.chapter_no = chapter_no
+    def clean(self):
+        chapters = Chpaters.objects()
+        if chapters:
+            self.id = Chpaters.count()
+        else:
+            self.id = 0
+    def save(self,*args,**kwargs):
+        chpaters = Chpaters.objects()
+        if chpaters:
+             self.id = chpaters.count()
+        else:
+            self.id = 0
+        super.save(*args,**kwargs)            
+                   
+class Question(Document):
+   grade = ReferenceField(Grade, reverse_delete_rule=CASCADE)
+   subjet = ReferenceField(Subject, reverse_delete_rule=CASCADE)
+   chapter = ReferenceField(Chpaters,reverse_delete_rule=CASCADE)
+   question = StringField(max_length=100)
+   duration = DateTimeField(default=datetime)
+   mark = IntField()
+   chapter_no = IntField()
+   created_at = DateField(default=datetime)
+   question_type = StringField(max_length=30, )
+   def _init_(self,grade,subject,chapter,question,
+   duration,mark,chapdter_no,created_at,question_type):
+      self.duration = duration
+      self.mark = mark
+      self.chapter_no = chapdter_no
+      self.question_type = question_type
+      self.created_at = created_at
+   def clean(self):
+       question = Question.objects()
+       if question:
+         self.id = question.count()  
+       else:
+        self.id = 0
+   def save(self,*args,**kwargs):
+        question = Question.objects()
+        if question:
+            self.id= question.count()
+        else:
+            self.id = 0
+        super.save(*args,**kwargs)    
+
+    
+
+  
