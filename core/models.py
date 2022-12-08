@@ -118,7 +118,7 @@ class Chapter(Document):
     meta = {'collection': 'chapters'}
 
     def validate(self, clean=True):
-        subject = Subject.objects(id=self.subject_id).first()
+        subject = Subject.objects(id=self.subject_id.id).first()
         chapters = Chapter.objects(subject_id=subject)
         if not subject:
             raise ValidationError(message="subject dosn't exists")
