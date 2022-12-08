@@ -6,7 +6,7 @@ from functools import wraps
 def token_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if session['token']:
+        if session and session['token']:
             token_id = session['token']
             print(token_id)
         else:
