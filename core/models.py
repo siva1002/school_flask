@@ -1,12 +1,10 @@
-
-import datetime
 import uuid
-from mongoengine import Document, StringField, EmailField, IntField, ObjectIdField, ValidationError, ReferenceField, CASCADE, BooleanField, DateField,ListField
+from mongoengine import Document, StringField, EmailField, IntField, ObjectIdField, ValidationError, ReferenceField, CASCADE, BooleanField, DateField,ListField,SequenceField
 from flask_login import UserMixin
-
+import datetime
 
 class User(Document, UserMixin):
-    id = IntField(required=True, primary_key=True)
+    id = SequenceField(primary_key=True)
     email = EmailField(required=True)
     phone = IntField(required=True)
     registernumber = StringField(required=True)
@@ -23,15 +21,6 @@ class User(Document, UserMixin):
     def get_id(self):
         return self.id
 
-    def clean(self):
-        users = User.objects
-        if users:
-            self.id = (users[users.count()-1]).id + 1
-        else:
-            self.id = 0
-        print(users)
-
-
 class Token(Document):
     user_id = ReferenceField(document_type=User, reverse_delete_rule=CASCADE)
     token_id = StringField()
@@ -47,7 +36,7 @@ class Token(Document):
 
 
 class Profile(Document):
-    _id = IntField(primary_key=True, required=True)
+    id = SequenceField(primary_key=True)
     firstname = StringField(max_length=50)
     lastname = StringField(max_length=50)
     fullname = StringField(max_length=50)
@@ -73,7 +62,7 @@ class Profile(Document):
 
 
 class Grade(Document):
-    _id = IntField(primary_key=True, requried=True)
+    id = SequenceField(primary_key=True)
     grade = IntField()
     section = ListField()
 
@@ -87,43 +76,35 @@ class Grade(Document):
             return False
         else:
             return True
-    def save(self,*args,**kwargs):
-        grades = Grade.objects
-        if grades:
-            self.id = grades.count()
-        else:
-            self.id = 1
-        super().save(*args, **kwargs)
    
-
-
-
 class Subject(Document):
-    _id = IntField(primary_key=True, requried=True)
+    id = SequenceField(primary_key=True)
     name = StringField(max_length=20)
-    code = IntField()
-    grade = ReferenceField(Grade, reverse_delete_rule=CASCADE)
+    code = StringField(max_length=20)
+    grade = ReferenceField(Grade, reverse_delete_rule=CASCADE,dbref = True)
     created_at = DateField(default=datetime)
 
-    def _init_(self, name, code, grade, created_at):
+    def _init_(self, name, code, created_at):
         self.name = name
         self.code = code
         self.created_at = created_at
     meta = {'collection': 'subject'}
     def validate(self,clean=False):
-        objects=Subject.objects(name=self.name).first()
-        print(self.to_json())
-        if objects:
-            return False
-        else:
-            return True
-
+            objects=Subject.objects()
+            print(objects)
+            print(self.to_json())
+            if objects:
+                objects=Subject.objects(name=self.name,grade=self.grade).first()
+                code=Subject.objects(code=(self.name[:3]+str(self.code)).upper()).first()
+                if objects or code:
+                    return False
+                return True
+            else:
+                return True
     def save(self,*args,**kwargs):
         subjects = Subject.objects
         if subjects:
-            self.id = subjects.count()
-            self.code=self.name[:3]+str(self.code)
+            self.code=(self.name[:3]+str(self.code)).upper()
         else:
-            self.id = 1
-            self.code=self.name[:4]+str(self.code)
-        super(Subject,self).save(*args, **kwargs)
+            self.code=self.name[:3]+str(self.code)
+        super().save(*args, **kwargs)
