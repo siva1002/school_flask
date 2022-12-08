@@ -101,11 +101,11 @@ class Subject(Document):
         else:
             self.code = (self.name[:3]+str(self.code)).upper()
         super().save(*args, **kwargs)
-    def update(self, **kwargs,):
-        code=Subject.object(code=str(self.code).upper())
-        if code:
-            return ValidationError(f"Code existed for{code.name} give another one")
-        return super().update(**kwargs)
+    # def update(self,*args, **kwargs,):
+    #     code=Subject.object(code=str(self.code).upper())
+    #     if code:
+    #         return ValidationError(f"Code existed for{code.name} give another one")
+    #     return super(self).update(*args,**kwargs)
 
 
 class Chapter(Document):
