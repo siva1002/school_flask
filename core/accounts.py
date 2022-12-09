@@ -73,9 +73,9 @@ def signup():
         data = request.json
         print(data)
         user = User(**data['user'])
+        profile=Profile(**data['profile'],user=user)
         user.save()
-        profile = Profile(**data['profile'],user=user)
-        profile.save()
+       
         return Response(dumps({'message': 'created'}), status=200)
     except Exception as e:
         print(e, 'error')
@@ -138,6 +138,7 @@ def check_for_user():
             return Response(dumps({'status': 'failure', 'data': 'phone altready exists'}), status=204)
     print(email, 'ji', phone)
     return Response(status=200)
+
 
 
 # @accounts.route('student')

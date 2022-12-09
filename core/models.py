@@ -10,13 +10,14 @@ from mongoengine import (
     DateField,
     ListField,
     DateTimeField,
+    EmbeddedDocumentField,
+    EmbeddedDocument,
+    DictField,
     CASCADE,
 )
 import datetime
 from flask_login import UserMixin
 import uuid
-
-
 class User(Document, UserMixin):
     id = SequenceField(primary_key=True)
     email = EmailField(required=True)
@@ -40,6 +41,8 @@ class User(Document, UserMixin):
             raise ValidationError(message='register number altready exists')
         return super().validate(clean)
 
+
+
 class Profile(Document):
     id = SequenceField(primary_key=True)
     firstname = StringField(max_length=50)
@@ -47,8 +50,9 @@ class Profile(Document):
     fullname = StringField(max_length=50)
     address = StringField(max_length=100)
     standard = ListField()
-    user = ReferenceField(User, reverse_delete_rule=CASCADE)
+    user=ReferenceField(User,reverse_delete_rule=CASCADE)
     meta = {'collection': 'profile'}
+
 class Token(Document):
     user_id = ReferenceField(document_type=User, reverse_delete_rule=CASCADE)
     token_id = StringField()

@@ -171,4 +171,39 @@ def questionUD(id):
             except Exception as e:
                 return Response(dumps({"message":str(e)}),status=400)
     return Response(dumps({"message":"Question doesn't exists"}),status=400)
-            
+
+@academics.route('load_subject_chapter',methods=['GET'])
+def load_subject_chapter():
+    grade_id=request.args.get('grade_id', None)
+    subject_id=request.args.get('subject_id', None)
+    print(grade_id,type(subject_id))
+    if grade_id:
+        print(grade_id)
+        subject = Subject.objects(grade=int(grade_id))
+        return Response(dumps({"subject":subject.to_json()}),status=200)
+    chapter = Chapter.objects(subject_id=int(subject_id))
+    return Response(dumps({"chapter":chapter}),status=200)
+@academics.route('load_grade',methods=['GET'])
+def load_grade():
+    user = 'is_admin'
+    if user.usertype == 'is_admin':
+        grades = Grade.objects
+        return Response(dumps({"data":grades.to_json()}),status=200)
+    elif user.user_type == 'is_staff':
+        standard = user.profile.standard
+        grades = Grade.objects(grade=standard)
+        return Response(dumps({"data":grades.to_json()}),status=200)
+    else:
+        return None
+# @academics.route('load_test',methods=['GET'])
+# def load_test(request):
+#     # grade_id = request.GET.get('grade', None)
+#     subject_id = request.GET.get('subject', None)
+#     if subject_id:
+#         test = Test.objects.filter(subject_id= subject_id)
+#     return render(request, 'academics/test_dropdown.html', {'items':test})
+# @academics.route('load_chapter',methods=['GET'])
+# def load_chapter_no(request):
+#     subject_id = request.GET.get('subject', None)
+#     chapter = Chapter.objects.filter(subject=subject_id)
+#     return render(request, 'academics/dropdown_chapter_no.html', {'items': chapter})
