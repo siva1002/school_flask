@@ -71,14 +71,11 @@ def signup():
     try:
         print(request.json)
         data = request.json
-
         user = User(email=data['email'], phone=data['phone'],
                     registernumber=data['registernumber'], user_type=data['user_type'])
         user.save()
         profile = Profile(fullname=data['fullname'], firstname=data["firstname"],
-                          lastname=data['lastname'], address=data['address'], user=user)
-        for i in profile:
-            print(i)
+                          lastname=data['lastname'], address=data['address'],standard=data['standard'],user=user)
         profile.save()
         return Response(dumps({'message': 'created'}), status=200)
     except Exception as e:
