@@ -135,26 +135,34 @@ class Chapter(Document):
             raise ValidationError(
                 message="this subject has the chapter in this name altready")
         return super().validate(clean)
+
+
 class Question(Document):
     id = SequenceField(primary_key=True)
     grade = ReferenceField(Grade, reverse_delete_rule=CASCADE)
     subject = ReferenceField(Subject, reverse_delete_rule=CASCADE)
-    chapter = ReferenceField(Chapter,reverse_delete_rule=CASCADE)
+    chapter = ReferenceField(Chapter, reverse_delete_rule=CASCADE)
     question = StringField(max_length=150)
     duration = IntField()
     mark = IntField()
     chapter_no = IntField()
     created_at = DateField(default=datetime.datetime.now())
-    question_type = StringField(max_length=20,choices={'filling_in_blanks','MCQ'},default= None)
-    congitive_level =  StringField(max_length=20,choices={ 'application','knowledge','comprehension'},default=None)
-    difficulty_level = StringField(max_length=20,choies={'medium','hard','easy'},default=None)
-    meta = {'collection':'questions'}
+    question_type = StringField(max_length=20, choices={
+                                'filling_in_blanks', 'MCQ'}, default=None)
+    congitive_level = StringField(max_length=20, choices={
+                                  'application', 'knowledge', 'comprehension'}, default=None)
+    difficulty_level = StringField(
+        max_length=20, choies={'medium', 'hard', 'easy'}, default=None)
+    meta = {'collection': 'questions'}
+
+
 class Answer(Document):
     id = SequenceField(primary_key=True)
-    question=ReferenceField(Question,reverse_delete_rule=CASCADE,dbref=True)
-    option_a=StringField(max_length=40)
-    option_b=StringField(max_length=40)
-    option_c=StringField(max_length=40)
-    option_d=StringField(max_length=40)
-    correctanswer = StringField(choices={"option_d","option_c","option_b","option_a"})
-   
+    question = ReferenceField(
+        Question, reverse_delete_rule=CASCADE, dbref=True)
+    option_a = StringField(max_length=40)
+    option_b = StringField(max_length=40)
+    option_c = StringField(max_length=40)
+    option_d = StringField(max_length=40)
+    correctanswer = StringField(
+        choices={"option_d", "option_c", "option_b", "option_a"})
