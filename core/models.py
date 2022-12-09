@@ -152,6 +152,28 @@ class Instruction(Document):
     note = StringField(max_length=250)
     meta = {'collection':'instruction'}
 
+class Test(Document):
+    question_paper= ReferenceField(Question_paper,reverse_delete_rule=CASCADE)
+    grade = ReferenceField(Grade,reverse_delete_rule=CASCADE)
+    subject = ReferenceField(Subject,reverse_delete_rule=CASCADE)
+    duration = IntField()
+    mark = IntField()
+    remarks = StringField(max_length=250)
+    description = StringField(max_length=100)
+    test_id = IntField()
+    pass_percentage = IntField()
+    meta = {'collection':'test'}
+
+
+
+
+
+
+# class Question_bank(Document):
+#     grade = ReferenceField(Grade,reverse_delete_rule=CASCADE)
+#     subject = ReferenceField(Subject,reverse_delete_rule=CASCADE)
+#     meta = {'collection':'question_bank'}
+
 
 
 

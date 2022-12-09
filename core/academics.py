@@ -138,3 +138,19 @@ def instructions():
     instructions_query = Instruction(note=data['note'])
     instructions_query.save()
     return Response(dumps({'message':'created'}),status=200)
+@academics.route('questionpaper/',methods=['POST'])
+def question_paper():
+    data = request.json
+    query = Question_paper(grade=data['grade'],subject=data['subject'],created_by=data['created_by'],
+    created_at = data['created_at'],test_id=data['test_id'],duration=data['duration'],
+    overall_mark=data['overall_mark'],no_of_question=data['no_of_question'])  
+    query.save() 
+    return Response(dumps({'message':'created'}),status=200) 
+@academics.route('test/',methods=['POST'])
+def test():
+    data = request.json
+    test_query = Test(question_paper=data['question_paper'],grade = data['grade'],
+    subject=data['subject'],duration=data['subject'], 
+    mark = data['mark'],remarks=data['remarks'],description=data['description'],
+    test_id=data['test_id'],pass_percentage=data['pass_percentage'])
+    test_query.save()
