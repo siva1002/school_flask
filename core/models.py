@@ -7,21 +7,25 @@ import json
 import datetime
 import uuid
 from mongoengine import Document, SequenceField, StringField, EmailField, IntField, ObjectIdField, ValidationError, ReferenceField, CASCADE, BooleanField, DateField, ListField, DateTimeField
-from flask_login import UserMixin
 import datetime
+import json
+from bson import ObjectId
+from typing import Optional
+from pydantic import BaseModel, Field
+from flask_login import UserMixin
+import uuid
 
 
 class User(Document, UserMixin):
     id = SequenceField(primary_key=True)
     email = EmailField(required=True)
     phone = IntField(required=True)
-    user_type = StringField(
-        choices={'is_admin', 'is_staff', 'is_student'}, default=None)
     registernumber = StringField(required=True)
     usertype = StringField(
         choices={'is-Admin', 'is-Staff', 'is-Student'}, default=None)
     is_active = BooleanField(default=True)
     meta = {'collections': 'user'}
+
     def get_id(self):
         return self.id
 
@@ -40,6 +44,7 @@ class Token(Document):
     user_id = ReferenceField(document_type=User, reverse_delete_rule=CASCADE)
     token_id = StringField()
     meta = {'collections': 'token'}
+
     def save(self, *args, **kwargs):
         self.token_id = str(uuid.uuid4())
         super().save(*args, **kwargs)
@@ -80,16 +85,18 @@ class Subject(Document):
     def validate(self, clean=True):
         objects = Subject.objects
         if objects:
-            objects = Subject.objects(name=self.name , grade=self.grade).first()
-            print(objects)
-            code = Subject.objects(
-                code=(self.name[:3]+str(self.code)).upper()).first()
-            if objects:
+            code = Subject.objects(code=(str(self.name[:3]).upper()+str(self.code)).upper())
+            subject= Subject.objects(grade=self.grade,name=self.name)
+            print(self.code,'new')
+            if subject:
+                print(subject.to_json())
                 raise ValidationError(
                     message='Subject already exists for this grade')
             if code:
+                print(code.to_json())
                 raise ValidationError(
                     message='Code already exists give another one')
+            
         else:
             return True
 
@@ -97,8 +104,9 @@ class Subject(Document):
         subjects = Subject.objects
         if subjects:
             self.code = (self.name[:3]+str(self.code)).upper()
-            self.name=str(self.name).upper()
+            self.name = str(self.name).upper()
         else:
+            self.name = str(self.name).upper()
             self.code = (self.name[:3]+str(self.code)).upper()
         super().save(*args, **kwargs)
 
@@ -114,7 +122,7 @@ class Chapter(Document):
     meta = {'collection': 'chapters'}
 
     def validate(self, clean=True):
-        subject = Subject.objects(id=self.subject_id).first()
+        subject = Subject.objects(id=self.subject_id.id).first()
         chapters = Chapter.objects(subject_id=subject)
         if not subject:
             raise ValidationError(message="subject dosn't exists")
@@ -128,33 +136,34 @@ class Question(Document):
    grade = ReferenceField(Grade, reverse_delete_rule=CASCADE)
    subject = ReferenceField(Subject, reverse_delete_rule=CASCADE)
    chapter = ReferenceField(Chapter,reverse_delete_rule=CASCADE)
-   question = StringField(max_length=100)
+   question = StringField(max_length=150)
    duration = IntField()
    mark = IntField()
    chapter_no = IntField()
    created_at = DateField(default=datetime.datetime.now())
-   question_type = StringField(max_length=20,choies={ 
-        'choices'='questiontype_choice',
-        'default=questiontype_choice[0][0]'} )
-   congitive_level =  StringField(max_length=20,choies={
-    'choices'='congitive_level',
-    'default'='congitive_choice[0][0]'
-   }) 
-   difficulty_level = StringField(max_length=20,choies={
-    'choices'='difficulty_level',
-    'default'='difficulty_choice[0][0]'
-   })  
+   question_type = StringField(max_length=20,choices={'filling_in_blanks','MCQ'},default= None)
+   congitive_level =  StringField(max_length=20,choices={ 'application','knowledge','comprehension'},default=None)
+   difficulty_level = StringField(max_length=20,choies={'medium','hard','easy'},default=None)
    meta = {'collection':'questions'}  
-   def clean(self):
-       question = Question.objects()
-       if question:
-         self.id = question.count()  
-       else:
-        self.id = 0
-   def save(self,*args,**kwargs):
-        question = Question.objects()
-        if question:
-            self.id= question.count()
-        else:
-            self.id = 0
-        super.save(*args,**kwargs)    
+
+   def validate(self, clean=True):
+        
+
+
+
+
+
+
+
+
+
+
+
+#    def clean(self):
+#        question = Question.objects()
+#        if question:
+#          self.id = question.count()  
+#        else:
+#         self.id = 0
+#    def save(self,*args,**kwargs):
+#         super().save(*args,**kwargs)    
