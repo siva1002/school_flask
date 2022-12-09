@@ -22,6 +22,26 @@ def grade():
         return Response(dumps({'message': e}), status=400)
 
 
+@academics.route('grade/<int:id>', methods=['PATCH', 'DELETE'])
+def gradeUD(id):
+    query = Grade.objects(id=id).get()
+    if request.method == 'PATCH':
+        print(query.to_json())
+        if query:
+            data = request.json
+            try:
+                query.update(grade=data['grade'], section=data['section'])
+                return Response(dumps({"message": f"Grade {query.grade} Updated "}), status=200)
+            except Exception as e:
+                return Response(dumps({'message': str(e)}), status=400)
+    if request.method == 'DELETE':
+        if query:
+            try:
+                query.delete()
+            except Exception as e:
+                return Response(dumps({'message': str(e)}), status=400)
+
+
 @academics.route('subject/', methods=['POST'])
 def subject(id=None):
     print('POST')
@@ -56,7 +76,7 @@ def subjectUD(id=None):
     if request.method == 'DELETE':
         subject = Subject.objects(id=id).first()
         subject.delete()
-        return Response(dumps({'status': 'success', 'data': 'chapter {} deleted successfully'.format(subject.name)}))
+        return Response(dumps({'status': 'success', "data": f"chapter {subject.name} deleted successfully"}))
 
 
 @academics.route('chapter/', methods=['GET', 'POST'])
@@ -123,3 +143,18 @@ def chapter_list():
         chapter['subject'] = subject.name
         chapter['subject_id'] = subject.id
     return Response(dumps({'status': 'success', 'data': chapters}))
+
+
+@academics.route('question/', methods=['POST'])
+def question():
+    data = request.json
+    # query = Question(grade=data['grade'],subject=data['subject'],chapter=data['subject'],
+    # question=data['question'],duration=data['duration'],mark = data['mark'],chapter_no=data['chapter_no'],question_type=data['question_type'],congitive_level=data['congitive_level'],difficulty_level=data['difficulty_level'])
+    question = Question(**data['question'])
+    answer = Answer(**data['answer'], question=question)
+    try:
+        question.save()
+        answer.save()
+        return Response(dumps({'staus': 'created'}))
+    except Exception as e:
+        return Response(dumps({'staus': 'question is not created', 'data': str(e)}))
