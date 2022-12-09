@@ -123,3 +123,21 @@ def chapter_list():
         chapter['subject'] = subject.name
         chapter['subject_id'] = subject.id
     return Response(dumps({'status': 'success', 'data': chapters}))
+
+
+# @ academics.route('grade/<id>', methods=['GET', 'PATCH', 'DELETE'])
+# def grade_edit(id):
+#     grade = Grade.objects(id=id).first()
+#     if not grade:
+#         return Response(dumps({'status': 'failure', 'data': "grade doesn't exists"}), status=206)
+#     if request.method == 'PATCH':
+#         try:
+#             data = request.json
+#             for key in data:
+#                 if not hasattr(grade, key):
+#                     return Response(dumps({'status': 'failure', "data": "check given data"}), status=206)
+#                 setattr(grade, key, data[key])
+#             grade.save()
+#         except Exception as error:
+#             return Response(dumps({'status': 'failure', 'data': str(error)}), status=204)
+#     return Response(dumps({'status': 'success', 'data': grade.to_json()}), status=200)

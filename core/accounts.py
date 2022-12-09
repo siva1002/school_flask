@@ -139,11 +139,35 @@ def check_for_user():
     users = User.objects
     for user in users:
         if user.email == email:
-            return Response(dumps({'status': 'failure', 'data': 'email altready exists'}), status=204)
+            return Response(dumps({'status': 'failure', 'data': 'email altready exists'}), status=206)
         if user.phone == phone:
-            return Response(dumps({'status': 'failure', 'data': 'phone altready exists'}), status=204)
+            return Response(dumps({'status': 'failure', 'data': 'phone altready exists'}), status=206)
     print(email, 'ji', phone)
     return Response(status=200)
 
 
-# @accounts.route('student')
+@accounts.route('student-profile/', methods=['GET', 'PATCH'])
+# @token_required
+def profile_edit():
+    user = loads(session['user'])
+    print(user)
+    try:
+        print(user)
+        profile = Profile.objects(user=user['_id']).first()
+        print(profile, 'd')
+        if not profile:
+            return Response(dumps({'status': 'failure', 'data': "profile dosn't exists"}), status=206)
+    except Exception as error:
+        return Response(dumps({'status': 'failure', 'data': str(error)}), status=204)
+    if request.method == 'PATCH':
+        try:
+            data = request.json
+            for key in data:
+                if not hasattr(profile, key):
+                    print('dsa')
+                    return Response(dumps({'status': 'failure', "data": "check user data"}), status=206)
+                setattr(profile, key, data[key])
+            profile.save()
+        except Exception as error:
+            return Response(dumps({'status': 'failure', 'data': str(error)}), status=204)
+    return Response(dumps({'status': 'success', 'data': profile.to_json()}), status=200)
