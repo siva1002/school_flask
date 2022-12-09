@@ -136,6 +136,7 @@ class Chapter(Document):
                 message="this subject has the chapter in this name altready")
         return super().validate(clean)
 class Question(Document):
+    id = SequenceField(primary_key=True)
     grade = ReferenceField(Grade, reverse_delete_rule=CASCADE)
     subject = ReferenceField(Subject, reverse_delete_rule=CASCADE)
     chapter = ReferenceField(Chapter,reverse_delete_rule=CASCADE)
@@ -148,17 +149,12 @@ class Question(Document):
     congitive_level =  StringField(max_length=20,choices={ 'application','knowledge','comprehension'},default=None)
     difficulty_level = StringField(max_length=20,choies={'medium','hard','easy'},default=None)
     meta = {'collection':'questions'}
-
-    # def validate(self,clean=True):
-    #     grade=Grade.objects(grade=self.grade).get()
-    #     subject=Subject.objects(subject=self.subject).get()
-    #     chapter=Chapter.objects(chapter=self.chapter).get()
-    #     print(grade)
-    #     if grade is None:
-    #         raise ValidationError('Grade Does Not Exist')
-    #     if subject is None:
-    #         raise ValidationError('Subject Does Not Exist')
-    #     if chapter is None:
-    #         raise ValidationError('Chapter Does Not Exist')
-    #     return super().validate(clean)
-
+class Answer(Document):
+    id = SequenceField(primary_key=True)
+    question=ReferenceField(Question,reverse_delete_rule=CASCADE,dbref=True)
+    option_a=StringField(max_length=40)
+    option_b=StringField(max_length=40)
+    option_c=StringField(max_length=40)
+    option_d=StringField(max_length=40)
+    correctanswer = StringField(choices={"option_d","option_c","option_b","option_a"})
+   
