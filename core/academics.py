@@ -160,7 +160,7 @@ def testresult():
     question_paper=data['question_paper'],result=data['result'],score=data['score'],correct_answer=data['correct_answer'],
     wrong_answer=data['wrong_answer'],unanswer_question=data['unanswer_question']) 
     resultquery.save()   
-@academics.route('testresult<pk>/',mehtods=['PATCH'])
+@academics.route('testresult<pk>/',methods=['PATCH'])
 def resultupdate(id):
     testresult = Testresult.objects(id=id).first()
     if not testresult:
@@ -177,4 +177,10 @@ def resultupdate(id):
     if request.method=='DELETE':
         testresult.delete()
         return Response(dumps({"status":"id_deleted"}),status=200)
+@academics.route('questionbank/',methods=['POST'])
+def questionbank():
+    data = request.json
+    questionbank = Question_bank(grade=data['grade'],subject=data['subject'])
+    questionbank.save()   
+    return Response(dumps({"status":'created'}),status=200) 
                   

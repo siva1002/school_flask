@@ -153,7 +153,7 @@ class Instruction(Document):
     meta = {'collection':'instruction'}
 
 class Test(Document):
-    question_paper= ReferenceField(Question_paper,reverse_delete_rule=CASCADE)
+    # question_paper= ReferenceField(Question_paper,reverse_delete_rule=CASCADE)
     grade = ReferenceField(Grade,reverse_delete_rule=CASCADE)
     subject = ReferenceField(Subject,reverse_delete_rule=CASCADE)
     duration = IntField()
@@ -168,13 +168,17 @@ class Testresult(Document):
     grade = ReferenceField(Grade,reverse_delete_rule=CASCADE)
     subject = ReferenceField(Subject,reverse_delete_rule=CASCADE)
     test_id = ReferenceField(Test,reverse_delete_rule=CASCADE)
-    question_paper = ReferenceField(Question_paper,reverse_delete_rule=CASCADE)
+    # question_paper = ReferenceField(Question_paper,reverse_delete_rule=CASCADE)
     result = StringField(max_length=20)
     score = IntField()
     correct_answer = IntField()
     worong_answer = IntField()
     unanswer_question = IntField()
     meta ={'collection':'testresult'}
+class Question_bank(Document):
+    grade = ReferenceField(Grade,reverse_delete_rule=CASCADE)
+    subject = ReferenceField(Subject,reverse_delete_rule=CASCADE)
+    meta = {'collection':'question_bank'}
 
 
 
