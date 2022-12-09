@@ -21,8 +21,6 @@ class User(Document, UserMixin):
     id = SequenceField(primary_key=True)
     email = EmailField(required=True)
     phone = IntField(required=True)
-    user_type = StringField(
-        choices={'is_admin', 'is_staff', 'is_student'}, default=None)
     registernumber = StringField(required=True)
     usertype = StringField(
         choices={'is-Admin', 'is-Staff', 'is-Student'}, default=None)
@@ -137,17 +135,30 @@ class Chapter(Document):
             raise ValidationError(
                 message="this subject has the chapter in this name altready")
         return super().validate(clean)
-
-
 class Question(Document):
-    id = SequenceField(primary_key=True)
     grade = ReferenceField(Grade, reverse_delete_rule=CASCADE)
-    subjec = ReferenceField(Subject, reverse_delete_rule=CASCADE)
-    chapter = ReferenceField(Chapter, reverse_delete_rule=CASCADE)
-    question = StringField(max_length=100)
-    duration = IntField(min_value=0)
-    marks = IntField()
+    subject = ReferenceField(Subject, reverse_delete_rule=CASCADE)
+    chapter = ReferenceField(Chapter,reverse_delete_rule=CASCADE)
+    question = StringField(max_length=150)
+    duration = IntField()
+    mark = IntField()
     chapter_no = IntField()
     created_at = DateField(default=datetime.datetime.now())
-    question_type = StringField(max_length=30)
-    meta = {'collection': 'questions'}
+    question_type = StringField(max_length=20,choices={'filling_in_blanks','MCQ'},default= None)
+    congitive_level =  StringField(max_length=20,choices={ 'application','knowledge','comprehension'},default=None)
+    difficulty_level = StringField(max_length=20,choies={'medium','hard','easy'},default=None)
+    meta = {'collection':'questions'}
+
+    # def validate(self,clean=True):
+    #     grade=Grade.objects(grade=self.grade).get()
+    #     subject=Subject.objects(subject=self.subject).get()
+    #     chapter=Chapter.objects(chapter=self.chapter).get()
+    #     print(grade)
+    #     if grade is None:
+    #         raise ValidationError('Grade Does Not Exist')
+    #     if subject is None:
+    #         raise ValidationError('Subject Does Not Exist')
+    #     if chapter is None:
+    #         raise ValidationError('Chapter Does Not Exist')
+    #     return super().validate(clean)
+
