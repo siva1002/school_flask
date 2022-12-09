@@ -59,6 +59,7 @@ class Profile(Document):
     lastname = StringField(max_length=50)
     fullname = StringField(max_length=50)
     address = StringField(max_length=100)
+    standard = ListField()
     user = ReferenceField(User, reverse_delete_rule=CASCADE)
     meta = {'collection': 'profile'}
 
