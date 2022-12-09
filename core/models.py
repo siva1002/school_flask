@@ -34,7 +34,7 @@ class User(Document, UserMixin):
     def validate(self, clean=True):
         user = User.objects
         if user(email=self.email):
-            raise ValidationError(message='email altready exists')
+            raise ValidationError(message='email already exists')
         if user(phone=self.phone):
             raise ValidationError(message='phone altready exists')
         if user(registernumber=self.registernumber):
