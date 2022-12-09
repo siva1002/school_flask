@@ -1,9 +1,18 @@
-from mongoengine import Document, SequenceField, StringField, EmailField, IntField, ObjectIdField, ValidationError, ReferenceField, CASCADE, BooleanField, DateField, ListField, DateTimeField
+from mongoengine import (
+    Document,
+    SequenceField,
+    StringField,
+    EmailField,
+    IntField,
+    ValidationError,
+    ReferenceField,
+    BooleanField,
+    DateField,
+    ListField,
+    DateTimeField,
+    CASCADE,
+)
 import datetime
-import json
-from bson import ObjectId
-from typing import Optional
-from pydantic import BaseModel, Field
 from flask_login import UserMixin
 import uuid
 
@@ -79,9 +88,10 @@ class Subject(Document):
     def validate(self, clean=True):
         objects = Subject.objects
         if objects:
-            code = Subject.objects(code=(str(self.name[:3]).upper()+str(self.code)).upper())
-            subject= Subject.objects(grade=self.grade,name=self.name)
-            print(self.code,'new')
+            code = Subject.objects(
+                code=(str(self.name[:3]).upper()+str(self.code)).upper())
+            subject = Subject.objects(grade=self.grade, name=self.name)
+            print(self.code, 'new')
             if subject:
                 print(subject.to_json())
                 raise ValidationError(
@@ -90,7 +100,7 @@ class Subject(Document):
                 print(code.to_json())
                 raise ValidationError(
                     message='Code already exists give another one')
-            
+
         else:
             return True
 
@@ -103,11 +113,6 @@ class Subject(Document):
             self.name = str(self.name).upper()
             self.code = (self.name[:3]+str(self.code)).upper()
         super().save(*args, **kwargs)
-    # def update(self,*args, **kwargs,):
-    #     code=Subject.object(code=str(self.code).upper())
-    #     if code:
-    #         return ValidationError(f"Code existed for{code.name} give another one")
-    #     return super(self).update(*args,**kwargs)
 
 
 class Chapter(Document):
@@ -123,8 +128,8 @@ class Chapter(Document):
     def validate(self, clean=True):
         subject = Subject.objects(id=self.subject_id.id).first()
         chapters = Chapter.objects(subject_id=subject)
-        if not subject:
-            raise ValidationError(message="subject dosn't exists")
+        if self.id:
+            chapters = chapters(id__ne=self.id)
         if chapters(chapter_no=self.chapter_no):
             raise ValidationError(message="chapter no in this altready exists")
         if chapters(name=self.name):

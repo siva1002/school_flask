@@ -15,13 +15,14 @@ connect(
 )
 db = get_db()
 
-# user details
 pipeline = [{"$lookup": {
     "from": "profile",
     "localField": "_id",
     "foreignField": 'user',
     "as": 'profile'
 }}]
+
+# user details
 
 
 @accounts.route('/')
@@ -112,13 +113,13 @@ def user(id):
 
 
 # logout
-
-
 @accounts.route('logout/')
 def logout():
     session['token'] = None
     session['user'] = None
     return {'status': 'logged out'}
+
+# profile details view
 
 
 @accounts.route('profile/', methods=['GET'])

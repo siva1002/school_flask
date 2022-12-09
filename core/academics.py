@@ -26,35 +26,38 @@ def grade():
 def subject(id=None):
     print('POST')
     data = request.json
-    query = Subject(name=str(data['name']).upper(),code=data['code'],grade=data['grade'])
+    query = Subject(name=str(data['name']).upper(),
+                    code=data['code'], grade=data['grade'])
     try:
         query.save()
         return Response(dumps({'message': f"{data['name']} Created"}), status=200)
     except Exception as e:
         return Response(dumps({'message': str(e)}), status=404)
 
-@academics.route('subject/<int:id>',methods=['PATCH','DELETE'])
+
+@academics.route('subject/<int:id>', methods=['PATCH', 'DELETE'])
 def subjectUD(id=None):
-    if request.method=='PATCH':
-        data=request.json
+    if request.method == 'PATCH':
+        data = request.json
         query = Subject.objects(id=int(id)).first()
         print(query.to_json())
         if query:
             try:
-                code=Subject.objects(code=str(data['code'])).first()
+                code = Subject.objects(code=str(data['code'])).first()
                 print(id)
-                if code is None  or code.id==id:
+                if code is None or code.id == id:
                     query.update(name=data['name'], code=data['code'])
                     return Response(dumps({'message': f" From Standard {str(query.grade.grade)},Subject {query.name} updated to {data['name']} "}), status=400)
                 else:
-                    return Response(dumps({'message':f' {code.name} Subject code already exists'}), status=404)
+                    return Response(dumps({'message': f' {code.name} Subject code already exists'}), status=404)
             except Exception as e:
                 print(e)
-                return Response(dumps({'message':str(e)}), status=400)
-    if request.method =='DELETE':
+                return Response(dumps({'message': str(e)}), status=400)
+    if request.method == 'DELETE':
         subject = Subject.objects(id=id).first()
         subject.delete()
         return Response(dumps({'status': 'success', 'data': 'chapter {} deleted successfully'.format(subject.name)}))
+
 
 @academics.route('chapter/', methods=['GET', 'POST'])
 # @token_required
@@ -63,11 +66,11 @@ def chapter():
         data = request.json
         print(data)
         try:
-            subjects = Subject.objects(id=data['subject_id']).first()
+            subject = Subject.objects(id=data['subject_id']).first()
             if not subject:
                 return Response(dumps({'status': 'failure', 'data': "subject doesn't exists"}))
             chapter = Chapter(name=data['name'], chapter_no=data['chapter_no'],
-                              description=data['description'], subject_id=subjects)
+                              description=data['description'], subject_id=subject)
             chapter.save()
         except Exception as e:
             return Response(dumps({'message': str(e)}))
@@ -78,7 +81,7 @@ def chapter():
         return Response(dumps({'status': 'success', 'data': chapters.to_json()}), status=200)
 
 
-@academics.route('chapter/<id>/', methods=['PATCH', "DELETE"])
+@ academics.route('chapter/<id>/', methods=['PATCH', "DELETE"])
 def chapter_edit(id):
     chapter = Chapter.objects(id=id).first()
     if not chapter:
@@ -101,7 +104,7 @@ def chapter_edit(id):
         return Response(dumps({'status': 'success', 'data': 'chapter {} deleted successfully'.format(chapter.name)}))
 
 
-@academics.route('chapter-list', methods=['POST'])
+@ academics.route('chapter-list', methods=['POST'])
 def chapter_list():
     data = request.json
     grade = Grade.objects(grade=data['grade']).get()
