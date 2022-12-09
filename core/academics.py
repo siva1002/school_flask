@@ -91,7 +91,7 @@ def chapter_edit(id):
         try:
             for key in data:
                 print(key)
-                setattr(chapter, key, data[key])
+                setattr(chapter, key, data[key])#set arrt in  objects update a give value 
             chapter.save()
             print(chapter)
         except Exception as e:
@@ -101,7 +101,6 @@ def chapter_edit(id):
     if request.method == "DELETE":
         chapter.delete()
         return Response(dumps({'status': 'success', 'data': 'chapter {} deleted successfully'.format(chapter.name)}))
-
 
 @ academics.route('chapter-list', methods=['POST'])
 def chapter_list():
@@ -154,3 +153,28 @@ def test():
     mark = data['mark'],remarks=data['remarks'],description=data['description'],
     test_id=data['test_id'],pass_percentage=data['pass_percentage'])
     test_query.save()
+@academics.route('testresult/',methods=['POST'])
+def testresult():
+    data = request.json
+    resultquery = Testresult(student_id=data['student_id'],grade=data['grade'],subject=data['subject'],test_id=data['test_id'],
+    question_paper=data['question_paper'],result=data['result'],score=data['score'],correct_answer=data['correct_answer'],
+    wrong_answer=data['wrong_answer'],unanswer_question=data['unanswer_question']) 
+    resultquery.save()   
+@academics.route('testresult<pk>/',mehtods=['PATCH'])
+def resultupdate(id):
+    testresult = Testresult.objects(id=id).first()
+    if not testresult:
+        return Response(dumps({'message':'not match'}))
+    if request.method=="PATCH":
+        data = request.json
+        try:
+            for x in data:
+                setattr(testresult,x,data[x])
+                testresult.save()
+                return Response(dumps({'message':'updated'}),status=200)
+        except Exception as e:
+            return Response(dumps({"status":'incorrectid','data':str(e)}),status=404)    
+    if request.method=='DELETE':
+        testresult.delete()
+        return Response(dumps({"status":"id_deleted"}),status=200)
+                  

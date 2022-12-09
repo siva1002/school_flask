@@ -163,6 +163,19 @@ class Test(Document):
     test_id = IntField()
     pass_percentage = IntField()
     meta = {'collection':'test'}
+class Testresult(Document):
+    student_id = ReferenceField(User,reverse_delete_rule=CASCADE)
+    grade = ReferenceField(Grade,reverse_delete_rule=CASCADE)
+    subject = ReferenceField(Subject,reverse_delete_rule=CASCADE)
+    test_id = ReferenceField(Test,reverse_delete_rule=CASCADE)
+    question_paper = ReferenceField(Question_paper,reverse_delete_rule=CASCADE)
+    result = StringField(max_length=20)
+    score = IntField()
+    correct_answer = IntField()
+    worong_answer = IntField()
+    unanswer_question = IntField()
+    meta ={'collection':'testresult'}
+
 
 
 
