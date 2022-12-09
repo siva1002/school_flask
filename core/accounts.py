@@ -15,13 +15,14 @@ connect(
 )
 db = get_db()
 
-# user details
 pipeline = [{"$lookup": {
     "from": "profile",
     "localField": "_id",
     "foreignField": 'user',
     "as": 'profile'
 }}]
+
+# user details
 
 
 @accounts.route('/')
@@ -70,14 +71,11 @@ def signup():
     try:
         print(request.json)
         data = request.json
-
         user = User(email=data['email'], phone=data['phone'],
                     registernumber=data['registernumber'], user_type=data['user_type'])
         user.save()
         profile = Profile(fullname=data['fullname'], firstname=data["firstname"],
-                          lastname=data['lastname'], address=data['address'], user=user)
-        for i in profile:
-            print(i)
+                          lastname=data['lastname'], address=data['address'],standard=data['standard'],user=user)
         profile.save()
         return Response(dumps({'message': 'created'}), status=200)
     except Exception as e:
@@ -112,13 +110,13 @@ def user(id):
 
 
 # logout
-
-
 @accounts.route('logout/')
 def logout():
     session['token'] = None
     session['user'] = None
     return {'status': 'logged out'}
+
+# profile details view
 
 
 @accounts.route('profile/', methods=['GET'])
@@ -129,3 +127,20 @@ def profile():
     user_pipeline.insert(0, {'$match': {'_id': int(user['_id'])}})
     user = User.objects.aggregate(pipeline=user_pipeline)
     return Response(dumps({'status': 'success', 'data': dumps(user)}), status=200)
+
+
+@accounts.route('check-user/', methods=['GET'])
+def check_for_user():
+    email = request.args.get('email')
+    phone = request.args.get('phone')
+    users = User.objects
+    for user in users:
+        if user.email == email:
+            return Response(dumps({'status': 'failure', 'data': 'email altready exists'}), status=204)
+        if user.phone == phone:
+            return Response(dumps({'status': 'failure', 'data': 'phone altready exists'}), status=204)
+    print(email, 'ji', phone)
+    return Response(status=200)
+
+
+# @accounts.route('student')

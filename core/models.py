@@ -1,17 +1,18 @@
-import uuid
-from flask_login import UserMixin
-from pydantic import BaseModel, Field
-from typing import Optional
-from bson import ObjectId
-import json
+from mongoengine import (
+    Document,
+    SequenceField,
+    StringField,
+    EmailField,
+    IntField,
+    ValidationError,
+    ReferenceField,
+    BooleanField,
+    DateField,
+    ListField,
+    DateTimeField,
+    CASCADE,
+)
 import datetime
-import uuid
-from mongoengine import Document, SequenceField, StringField, EmailField, IntField, ObjectIdField, ValidationError, ReferenceField, CASCADE, BooleanField, DateField, ListField, DateTimeField
-import datetime
-import json
-from bson import ObjectId
-from typing import Optional
-from pydantic import BaseModel, Field
 from flask_login import UserMixin
 import uuid
 
@@ -56,6 +57,7 @@ class Profile(Document):
     lastname = StringField(max_length=50)
     fullname = StringField(max_length=50)
     address = StringField(max_length=100)
+    standard = ListField()
     user = ReferenceField(User, reverse_delete_rule=CASCADE)
     meta = {'collection': 'profile'}
 
@@ -85,9 +87,10 @@ class Subject(Document):
     def validate(self, clean=True):
         objects = Subject.objects
         if objects:
-            code = Subject.objects(code=(str(self.name[:3]).upper()+str(self.code)).upper())
-            subject= Subject.objects(grade=self.grade,name=self.name)
-            print(self.code,'new')
+            code = Subject.objects(
+                code=(str(self.name[:3]).upper()+str(self.code)).upper())
+            subject = Subject.objects(grade=self.grade, name=self.name)
+            print(self.code, 'new')
             if subject:
                 print(subject.to_json())
                 raise ValidationError(
@@ -96,7 +99,7 @@ class Subject(Document):
                 print(code.to_json())
                 raise ValidationError(
                     message='Code already exists give another one')
-            
+
         else:
             return True
 
@@ -124,8 +127,8 @@ class Chapter(Document):
     def validate(self, clean=True):
         subject = Subject.objects(id=self.subject_id.id).first()
         chapters = Chapter.objects(subject_id=subject)
-        if not subject:
-            raise ValidationError(message="subject dosn't exists")
+        if self.id:
+            chapters = chapters(id__ne=self.id)
         if chapters(chapter_no=self.chapter_no):
             raise ValidationError(message="chapter no in this altready exists")
         if chapters(name=self.name):
@@ -145,9 +148,9 @@ class Question(Document):
    congitive_level =  StringField(max_length=20,choices={ 'application','knowledge','comprehension'},default=None)
    difficulty_level = StringField(max_length=20,choies={'medium','hard','easy'},default=None)
    meta = {'collection':'questions'}  
-
-   def validate(self, clean=True):
-        
+class Instruction(Document):
+    note = StringField(max_length=250)
+    meta = {'collection':'instruction'}
 
 
 
@@ -166,4 +169,4 @@ class Question(Document):
 #        else:
 #         self.id = 0
 #    def save(self,*args,**kwargs):
-#         super().save(*args,**kwargs)    
+#         super().save(*args,**kwargs) 
