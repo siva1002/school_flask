@@ -146,3 +146,55 @@ def question():
     return Response(dumps({'staus':'created'}))
     # except Exception as e:
     #     return Response(dumps({'staus':'question is not created','data':str(e)}))    
+@academics.route('instruction/',methods=['POST'])
+def instructions():
+    data = request.json
+    instructions_query = Instruction(note=data['note'])
+    instructions_query.save()
+    return Response(dumps({'message':'created'}),status=200)
+@academics.route('questionpaper/',methods=['POST'])
+def question_paper():
+    data = request.json
+    query = Question_paper(grade=data['grade'],subject=data['subject'],created_by=data['created_by'],
+    created_at = data['created_at'],test_id=data['test_id'],duration=data['duration'],
+    overall_mark=data['overall_mark'],no_of_question=data['no_of_question'])  
+    query.save() 
+    return Response(dumps({'message':'created'}),status=200) 
+@academics.route('test/',methods=['POST'])
+def test():
+    data = request.json
+    test_query = Test(question_paper=data['question_paper'],grade = data['grade'],
+    subject=data['subject'],duration=data['subject'], 
+    mark = data['mark'],remarks=data['remarks'],description=data['description'],
+    test_id=data['test_id'],pass_percentage=data['pass_percentage'])
+    test_query.save()
+@academics.route('testresult/',methods=['POST'])
+def testresult():
+    data = request.json
+    resultquery = Testresult(student_id=data['student_id'],grade=data['grade'],subject=data['subject'],test_id=data['test_id'],
+    question_paper=data['question_paper'],result=data['result'],score=data['score'],correct_answer=data['correct_answer'],
+    wrong_answer=data['wrong_answer'],unanswer_question=data['unanswer_question']) 
+    resultquery.save()   
+@academics.route('testresult<pk>/',methods=['PATCH'])
+def resultupdate(id):
+    testresult = Testresult.objects(id=id).first()
+    if not testresult:
+        return Response(dumps({'message':'not match'}))
+    if request.method=="PATCH":
+        data = request.json
+        try:
+            for x in data:
+                setattr(testresult,x,data[x])
+                testresult.save()
+                return Response(dumps({'message':'updated'}),status=200)
+        except Exception as e:
+            return Response(dumps({"status":'incorrectid','data':str(e)}),status=404)    
+    if request.method=='DELETE':
+        testresult.delete()
+        return Response(dumps({"status":"id_deleted"}),status=200)
+@academics.route('questionbank/',methods=['POST'])
+def questionbank():
+    data = request.json
+    questionbank = Question_bank(grade=data['grade'],subject=data['subject'])
+    questionbank.save()   
+    return Response(dumps({"status":'created'}),status=200) 

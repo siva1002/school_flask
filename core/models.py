@@ -63,9 +63,6 @@ class Token(Document):
         super().save(*args, **kwargs)
 
 
-
-
-
 class Grade(Document):
     id = SequenceField(primary_key=True)
     grade = IntField()
