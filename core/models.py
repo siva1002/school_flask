@@ -10,20 +10,21 @@ from mongoengine import (
     DateField,
     ListField,
     DateTimeField,
+    EmbeddedDocumentField,
+    EmbeddedDocument,
+    DictField,
     CASCADE,
 )
 import datetime
 from flask_login import UserMixin
 import uuid
-
-
 class User(Document, UserMixin):
     id = SequenceField(primary_key=True)
     email = EmailField(required=True)
     phone = IntField(required=True)
     registernumber = StringField(required=True)
     usertype = StringField(
-        choices={'is-Admin', 'is-Staff', 'is-Student'}, default=None)
+        choices={'is-admin', 'is-staff', 'is-student'}, default=None)
     is_active = BooleanField(default=True)
     meta = {'collections': 'user'}
 
@@ -41,6 +42,17 @@ class User(Document, UserMixin):
         return super().validate(clean)
 
 
+
+class Profile(Document):
+    id = SequenceField(primary_key=True)
+    firstname = StringField(max_length=50)
+    lastname = StringField(max_length=50)
+    fullname = StringField(max_length=50)
+    address = StringField(max_length=100)
+    standard = ListField()
+    user=ReferenceField(User,reverse_delete_rule=CASCADE)
+    meta = {'collection': 'profile'}
+
 class Token(Document):
     user_id = ReferenceField(document_type=User, reverse_delete_rule=CASCADE)
     token_id = StringField()
@@ -51,15 +63,7 @@ class Token(Document):
         super().save(*args, **kwargs)
 
 
-class Profile(Document):
-    id = SequenceField(primary_key=True)
-    firstname = StringField(max_length=50)
-    lastname = StringField(max_length=50)
-    fullname = StringField(max_length=50)
-    address = StringField(max_length=100)
-    standard = ListField()
-    user = ReferenceField(User, reverse_delete_rule=CASCADE)
-    meta = {'collection': 'profile'}
+
 
 
 class Grade(Document):
