@@ -10,6 +10,7 @@ from mongoengine import (
     DateField,
     ListField,
     DateTimeField,
+    FileField,
     CASCADE,
 )
 import datetime
@@ -148,11 +149,13 @@ class Question(Document):
     chapter_no = IntField()
     created_at = DateField(default=datetime.datetime.now())
     question_type = StringField(max_length=20, choices={
-                                'filling_in_blanks', 'MCQ'}, default=None)
+                                'fill_in_the_blanks', 'MCQ'}, default=None)
     congitive_level = StringField(max_length=20, choices={
                                   'application', 'knowledge', 'comprehension'}, default=None)
     difficulty_level = StringField(
         max_length=20, choies={'medium', 'hard', 'easy'}, default=None)
+    answer = IntField(min_value=0)
+    # answer=
     meta = {'collection': 'questions'}
 
 
@@ -166,3 +169,19 @@ class Answer(Document):
     option_d = StringField(max_length=40)
     correctanswer = StringField(
         choices={"option_d", "option_c", "option_b", "option_a"})
+
+
+class Question_paper(Document):
+    id = SequenceField()
+    grade = ReferenceField(Grade, reverse_delete_rule=CASCADE)
+    subject = ReferenceField(Subject, reverse_delete_rule=CASCADE)
+    file = FileField(upload_to='question_files/')
+    created_by = StringField(max_length=20)
+    created_at = DateTimeField(default=datetime.datetime.now())
+    test_id = StringField(max_length=25)
+    question_list = ListField()
+    timing = IntField(min_value=0)
+    overall_marks = IntField(min_value=0)
+
+    def __str__(self):
+        return (str(self.grade)+' '+str(self.subject))
