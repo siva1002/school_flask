@@ -7,13 +7,11 @@ from .models import Chapter
 academics = Blueprint('academics', __name__)
 
 # grade
-
-
 @academics.route('grade/', methods=['POST'])
 def grade():
     data = request.json
     try:
-        grade = Grade(grade=data['grade'], section=data['section'])
+        grade = Grade(**data)
         if grade.validate():
             grade.save()
             return Response(dumps({'message': f" Grade {data['grade']} Created"}), status=200)
@@ -28,7 +26,7 @@ def gradeUD(id):
         if query:
             data=request.json
             try:
-                query.update(grade=data['grade'],section=data['section'])
+                query.update(**data)
                 return Response(dumps({"message":f"Grade {query.grade} Updated "}), status=200)
             except Exception as e:
                 return Response(dumps({'message':str(e)}), status=400)
@@ -38,19 +36,19 @@ def gradeUD(id):
                 query.delete()
             except Exception as e:
                 return Response(dumps({'message':str(e)}), status=400)
+'''Subject Creation'''
 @academics.route('subject/', methods=['POST'])
 def subject():
     print('POST')
     data = request.json
-    query = Subject(name=str(data['name']).upper(),
-                    code=data['code'], grade=data['grade'])
+    query = Subject(**data)
     try:
         query.save()
         return Response(dumps({'message': f"{data['name']} Created"}), status=200)
     except Exception as e:
         return Response(dumps({'message': str(e)}), status=404)
 
-
+'''Subject Update and Delete'''
 @academics.route('subject/<int:id>', methods=['PATCH', 'DELETE'])
 def subjectUD(id=None):
     if request.method == 'PATCH':
@@ -62,7 +60,7 @@ def subjectUD(id=None):
                 code = Subject.objects(code=str(data['code'])).first()
                 print(id)
                 if code is None or code.id == id:
-                    query.update(name=data['name'], code=data['code'])
+                    query.update(**data)
                     return Response(dumps({'message': f" From Standard {str(query.grade.grade)},Subject {query.name} updated to {data['name']} "}), status=400)
                 else:
                     return Response(dumps({'message': f' {code.name} Subject code already exists'}), status=404)
@@ -73,7 +71,7 @@ def subjectUD(id=None):
         subject = Subject.objects(id=id).first()
         subject.delete()
         return Response(dumps({'status': 'success', "data": f"chapter {subject.name} deleted successfully"}))
-
+'''Chapter creation and retrieval'''
 @academics.route('chapter/', methods=['GET', 'POST'])
 # @token_required
 def chapter():
@@ -84,8 +82,7 @@ def chapter():
             subject = Subject.objects(id=data['subject_id']).first()
             if not subject:
                 return Response(dumps({'status': 'failure', 'data': "subject doesn't exists"}))
-            chapter = Chapter(name=data['name'], chapter_no=data['chapter_no'],
-                              description=data['description'], subject_id=subject)
+            chapter = Chapter(**data,subject_id=subject)
             chapter.save()
         except Exception as e:
             return Response(dumps({'message': str(e)}))
@@ -95,7 +92,7 @@ def chapter():
         print(chapters)
         return Response(dumps({'status': 'success', 'data': chapters.to_json()}), status=200)
 
-
+'''Chapter Edit and Delete '''
 @ academics.route('chapter/<id>/', methods=['PATCH', "DELETE"])
 def chapter_edit(id):
     chapter = Chapter.objects(id=id).first()
@@ -118,7 +115,7 @@ def chapter_edit(id):
         chapter.delete()
         return Response(dumps({'status': 'success', 'data': 'chapter {} deleted successfully'.format(chapter.name)}))
 
-
+'''Chapter retrieval'''
 @ academics.route('chapter-list', methods=['POST'])
 def chapter_list():
     data = request.json
@@ -138,11 +135,10 @@ def chapter_list():
         chapter['subject'] = subject.name
         chapter['subject_id'] = subject.id
     return Response(dumps({'status': 'success', 'data': chapters}))
+'''Question Creation'''
 @academics.route('question/',methods=['POST'])
 def question():
     data = request.json
-    # query = Question(grade=data['grade'],subject=data['subject'],chapter=data['subject'],
-    # question=data['question'],duration=data['duration'],mark = data['mark'],chapter_no=data['chapter_no'],question_type=data['question_type'],congitive_level=data['congitive_level'],difficulty_level=data['difficulty_level'])
     question=Question(**data['question'])
     answer=Answer(**data['answer'],question=question)
     try:
@@ -151,3 +147,28 @@ def question():
         return Response(dumps({'staus':'created'}))
     except Exception as e:
         return Response(dumps({'staus':'question is not created','data':str(e)}))    
+@academics.route('question/<int:id>', methods=['PATCH', 'DELETE'])
+def questionUD(id):
+    try:
+        question=Question.objects(id=id).get()
+        answer=Answer.objects(question=question).get()
+    except:
+        return Response(dumps({'message':'Question doesn\'t exist'}))
+    if question and answer:
+        if request.method == 'PATCH':
+            data=request.json
+            try:
+                question.update(**data['question'])
+                answer.update(**data['answer'])
+                return Response(dumps({'message':"Question updated"}))
+            except Exception as e:
+                return Response(dumps({"message": str(e)}),status=400)
+        if request.method == 'DELETE':
+            try:
+                question.delete()
+                answer.delete()
+                return Response(dumps({'message':"Question deleted"}),status=200)
+            except Exception as e:
+                return Response(dumps({"message":str(e)}),status=400)
+    return Response(dumps({"message":"Question doesn't exists"}),status=400)
+            
