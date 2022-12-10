@@ -195,9 +195,6 @@ def resultupdate(id):
 @academics.route('questionbank/',methods=['POST'])
 def questionbank():
     data = request.json
-    questionbank = Question_bank(grade=data['grade'],subject=data['subject'])
-    questionbank.save()   
-    return Response(dumps({"status":'created'}),status=200) 
     question=Question(**data['question'])
     answer=Answer(**data['answer'],question=question)
     try:
