@@ -73,9 +73,9 @@ def signup():
         data = request.json
         print(data)
         user = User(**data['user'])
-        profile=Profile(**data['profile'],user=user)
         user.save()
-       
+        profile = Profile(**data['profile'],user=user)
+        profile.save()
         return Response(dumps({'message': 'created'}), status=200)
     except Exception as e:
         print(e, 'error')

@@ -34,7 +34,7 @@ class User(Document, UserMixin):
     def validate(self, clean=True):
         user = User.objects
         if user(email=self.email):
-            raise ValidationError(message='email altready exists')
+            raise ValidationError(message='email already exists')
         if user(phone=self.phone):
             raise ValidationError(message='phone altready exists')
         if user(registernumber=self.registernumber):
@@ -149,6 +149,15 @@ class Question(Document):
    congitive_level =  StringField(max_length=20,choices={ 'application','knowledge','comprehension'},default=None)
    difficulty_level = StringField(max_length=20,choies={'medium','hard','easy'},default=None)
    meta = {'collection':'questions'}  
+class Answer(Document):
+    id = SequenceField(primary_key=True)
+    question=ReferenceField(Question,reverse_delete_rule=CASCADE,dbref=True)
+    option_a=StringField(max_length=40)
+    option_b=StringField(max_length=40)
+    option_c=StringField(max_length=40)
+    option_d=StringField(max_length=40)
+    correctanswer = StringField(choices={"option_d","option_c","option_b","option_a"})
+   
 class Instruction(Document):
     note = StringField(max_length=250)
     meta = {'collection':'instruction'}
@@ -176,37 +185,8 @@ class Testresult(Document):
     worong_answer = IntField()
     unanswer_question = IntField()
     meta ={'collection':'testresult'}
-class Question_bank(Document):
+class QuestionBank(Document):
     grade = ReferenceField(Grade,reverse_delete_rule=CASCADE)
     subject = ReferenceField(Subject,reverse_delete_rule=CASCADE)
     meta = {'collection':'question_bank'}
 
-
-
-
-
-
-
-# class Question_bank(Document):
-#     grade = ReferenceField(Grade,reverse_delete_rule=CASCADE)
-#     subject = ReferenceField(Subject,reverse_delete_rule=CASCADE)
-#     meta = {'collection':'question_bank'}
-
-
-
-
-
-
-
-
-
-
-
-#    def clean(self):
-#        question = Question.objects()
-#        if question:
-#          self.id = question.count()  
-#        else:
-#         self.id = 0
-#    def save(self,*args,**kwargs):
-#         super().save(*args,**kwargs) 

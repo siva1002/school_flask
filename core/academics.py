@@ -104,7 +104,7 @@ def chapter_edit(id):
         try:
             for key in data:
                 print(key)
-                setattr(chapter, key, data[key])#set arrt in  objects update a give value 
+                setattr(chapter, key, data[key])
             chapter.save()
             print(chapter)
         except Exception as e:
@@ -115,7 +115,7 @@ def chapter_edit(id):
         chapter.delete()
         return Response(dumps({'status': 'success', 'data': 'chapter {} deleted successfully'.format(chapter.name)}))
 
-
+'''Chapter retrieval'''
 @ academics.route('chapter-list', methods=['POST'])
 def chapter_list():
     data = request.json
@@ -155,7 +155,7 @@ def instructions():
 @academics.route('questionpaper/',methods=['POST'])
 def question_paper():
     data = request.json
-    query = Question_paper(grade=data['grade'],subject=data['subject'],created_by=data['created_by'],
+    query = QuestionBank(grade=data['grade'],subject=data['subject'],created_by=data['created_by'],
     created_at = data['created_at'],test_id=data['test_id'],duration=data['duration'],
     overall_mark=data['overall_mark'],no_of_question=data['no_of_question'])  
     query.save() 
@@ -198,3 +198,71 @@ def questionbank():
     questionbank = Question_bank(grade=data['grade'],subject=data['subject'])
     questionbank.save()   
     return Response(dumps({"status":'created'}),status=200) 
+    question=Question(**data['question'])
+    answer=Answer(**data['answer'],question=question)
+    try:
+        question.save()
+        answer.save()
+        return Response(dumps({'staus':'created'}))
+    except Exception as e:
+        return Response(dumps({'staus':'question is not created','data':str(e)}))    
+@academics.route('question/<int:id>', methods=['PATCH', 'DELETE'])
+def questionUD(id):
+    try:
+        question=Question.objects(id=id).get()
+        answer=Answer.objects(question=question).get()
+    except:
+        return Response(dumps({'message':'Question doesn\'t exist'}))
+    if question and answer:
+        if request.method == 'PATCH':
+            data=request.json
+            try:
+                question.update(**data['question'])
+                answer.update(**data['answer'])
+                return Response(dumps({'message':"Question updated"}))
+            except Exception as e:
+                return Response(dumps({"message": str(e)}),status=400)
+        if request.method == 'DELETE':
+            try:
+                question.delete()
+                answer.delete()
+                return Response(dumps({'message':"Question deleted"}),status=200)
+            except Exception as e:
+                return Response(dumps({"message":str(e)}),status=400)
+    return Response(dumps({"message":"Question doesn't exists"}),status=400)
+
+@academics.route('load_subject_chapter',methods=['GET'])
+def load_subject_chapter():
+    grade_id=request.args.get('grade_id', None)
+    subject_id=request.args.get('subject_id', None)
+    print(grade_id,type(subject_id))
+    if grade_id:
+        print(grade_id)
+        subject = Subject.objects(grade=int(grade_id))
+        return Response(dumps({"subject":subject.to_json()}),status=200)
+    chapter = Chapter.objects(subject_id=int(subject_id))
+    return Response(dumps({"chapter":chapter}),status=200)
+@academics.route('load_grade',methods=['GET'])
+def load_grade():
+    user = 'is_admin'
+    if user.usertype == 'is_admin':
+        grades = Grade.objects
+        return Response(dumps({"data":grades.to_json()}),status=200)
+    elif user.user_type == 'is_staff':
+        standard = user.profile.standard
+        grades = Grade.objects(grade=standard)
+        return Response(dumps({"data":grades.to_json()}),status=200)
+    else:
+        return None
+# @academics.route('load_test',methods=['GET'])
+# def load_test(request):
+#     # grade_id = request.GET.get('grade', None)
+#     subject_id = request.GET.get('subject', None)
+#     if subject_id:
+#         test = Test.objects.filter(subject_id= subject_id)
+#     return render(request, 'academics/test_dropdown.html', {'items':test})
+# @academics.route('load_chapter',methods=['GET'])
+# def load_chapter_no(request):
+#     subject_id = request.GET.get('subject', None)
+#     chapter = Chapter.objects.filter(subject=subject_id)
+#     return render(request, 'academics/dropdown_chapter_no.html', {'items': chapter})
