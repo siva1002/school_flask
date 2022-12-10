@@ -203,7 +203,6 @@ def load_grade():
 #         test = Test.objects.filter(subject_id= subject_id)
 #     return render(request, 'academics/test_dropdown.html', {'items':test})
 # @academics.route('load_chapter',methods=['GET'])
-# def load_chapter_no(request):
-#     subject_id = request.GET.get('subject', None)
-#     chapter = Chapter.objects.filter(subject=subject_id)
-#     return render(request, 'academics/dropdown_chapter_no.html', {'items': chapter})
+def load_chapter_no(request):
+    subject_id = request.GET.get('subject', None)
+    chapter = Chapter.objects.filter(subject=subject_id)
