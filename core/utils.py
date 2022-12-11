@@ -1,8 +1,8 @@
 from .models import Token, User
-from flask import session, request
+from flask import render_template,make_response,session,request
 from functools import wraps
 import os
-
+import pdfkit
 
 def token_required(f):
     @wraps(f)
@@ -31,9 +31,13 @@ def render_to_pdf2(template_src, folder_name, question_paper, params: dict):
     list = file_path.split('/')
     list.pop()
     file_path = '/'.join(list)
-    print(file_path)
+    # print(file_path)
+    html = render_template(
+        template_src,
+        params=params
+    )
 
-    return 'df'
+    # return 
     # print(questionb)
     # template = get_template(template_src)
     folder_name = folder_name
@@ -43,29 +47,26 @@ def render_to_pdf2(template_src, folder_name, question_paper, params: dict):
     # pdf = pisa.pisaDocument(BytesIO(html.encode("UTF-8")), result)
     # exists = False
 
-    # if not question_paper:
-    #     grade = params['grade']
-    #     subject = params['subject']
-    #     register_number = params['register_number']
+    if not question_paper:
+        grade = params['grade']
+        subject = params['subject']
+        register_number = params['register_number']
 
-    #     for file in os.listdir((str(settings.BASE_DIR)+f'/media/{folder_name}/')):
-    #         filename = (str(file))
-    #         if register_number in filename:
-    #             exists = True
-    #     filename = f'grade-{grade}&&subject-{subject}{register_number}'
-    #     try:
-    #         if exists:
-    #             os.rename((str(settings.BASE_DIR)+f'/media/{folder_name}/{file}'), (str(
-    #                 settings.BASE_DIR)+f'/media/{folder_name}/{filename}.pdf'))
-    #         with open(str(settings.BASE_DIR)+f'/media/{folder_name}/{filename}.pdf', 'wb+') as output:
-    #             pdf = pisa.pisaDocument(BytesIO(html.encode("UTF-8")), output)
-    #     except Exception as e:
-    #         print(e)
-    # return filename, True
-
-    # if pdf.err:
-    #     print('error')
-    #     return '', False
+        for file in os.listdir((str(file_path)+f'/media/{folder_name}/')):
+            filename = (str(file))
+            if register_number in filename:
+                exists = True
+        filename = f'grade-{grade}&&subject-{subject}{register_number}'
+        try:
+            if exists:
+                os.rename((file_path+f'/media/{folder_name}/{file}'), (file_path+f'/media/{folder_name}/{filename}.pdf'))
+            with open(file_path+f'/media/{folder_name}/{filename}.pdf', 'wb+') as output:
+                # pdf = pisa.pisaDocument(BytesIO(html.encode("UTF-8")), output)
+                response = make_response(html,False)
+                response.headers["Content-Type"] = "application/pdf"
+        except Exception as e:
+            print(e)
+        return filename, True
     # questionfile = SimpleUploadedFile(
     #     filename+'.pdf', result.getvalue(), content_type='application/pdf')
     # print(questionfile)

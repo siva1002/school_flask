@@ -1,7 +1,7 @@
 from .models import User, Profile, Token
 from mongoengine import connect, get_db
 from bson.json_util import dumps, loads
-from .extension import mongo
+# from .extension import mongo
 from .models import User, Token, Grade
 from flask import Blueprint, render_template, request, jsonify, make_response, Response
 from functools import wraps
