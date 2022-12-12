@@ -181,7 +181,7 @@ class Question_paper(Document):
     file = FileField(upload_to='question_files/')
     created_by = StringField(max_length=20)
     created_at = DateTimeField(default=datetime.datetime.now())
-    test_id = StringField(max_length=25)
+    test_uid = StringField(max_length=25)
     question_list = ListField()
     timing = IntField(min_value=0)
     overall_marks = IntField(min_value=0)
@@ -190,42 +190,38 @@ class Question_paper(Document):
         return (str(self.grade)+' '+str(self.subject))
 
 
-class Instruction(Document):
-    id = SequenceField(primary_key=True)
-    note = StringField(max_length=250)
-    meta = {'collection': 'instruction'}
-
-    def validate(self, clean=False):
-        objects = Instruction.objects(note=self.note).first()
-        if objects and objects.note == self.note:
-            return False
-        else:
-            return True
-
-
 class Test(Document):
     id = SequenceField(primary_key=True)
     question_paper = ReferenceField(
-        Question_paper, reverse_delete_rule=CASCADE)
-    grade = ReferenceField(Grade, reverse_delete_rule=CASCADE)
-    subject = ReferenceField(Subject, reverse_delete_rule=CASCADE)
+        Question_paper, reverse_delete_rule=CASCADE, dbref=True)
+    grade = ReferenceField(Grade, reverse_delete_rule=CASCADE, dbref=True)
+    subject = ReferenceField(Subject, reverse_delete_rule=CASCADE, dbref=True)
     duration = IntField()
     mark = IntField()
     remarks = StringField(max_length=250)
     description = StringField(max_length=100)
-    test_id = IntField()
+    test_uid = StringField()
     pass_percentage = IntField()
     meta = {'collection': 'test'}
+
+    def validate(self, clean=False):
+        if not self.test_uid:
+            self.test_uid = (str(uuid.uuid4()))[:16]
+        if not self.duration:
+            self.duration = self.question_paper.timing
+        if not self.mark:
+            self.mark = self.question_paper.overall_marks
+        return super().validate(clean)
 
 
 class Testresult(Document):
     id = SequenceField(primary_key=True)
-    student_id = ReferenceField(User, reverse_delete_rule=CASCADE)
-    grade = ReferenceField(Grade, reverse_delete_rule=CASCADE)
-    subject = ReferenceField(Subject, reverse_delete_rule=CASCADE)
-    test_id = ReferenceField(Test, reverse_delete_rule=CASCADE)
+    student_id = ReferenceField(User, reverse_delete_rule=CASCADE, dbref=True)
+    grade = ReferenceField(Grade, reverse_delete_rule=CASCADE, dbref=True)
+    subject = ReferenceField(Subject, reverse_delete_rule=CASCADE, dbref=True)
+    test_id = ReferenceField(Test, reverse_delete_rule=CASCADE, dbref=True)
     question_paper = ReferenceField(
-        Question_paper, reverse_delete_rule=CASCADE)
+        Question_paper, reverse_delete_rule=CASCADE, dbref=True)
     result = StringField(max_length=20)
     score = IntField()
     correct_answer = IntField()
@@ -239,3 +235,16 @@ class Question_bank(Document):
     grade = ReferenceField(Grade, reverse_delete_rule=CASCADE)
     subject = ReferenceField(Subject, reverse_delete_rule=CASCADE)
     meta = {'collection': 'question_bank'}
+
+
+class Instruction(Document):
+    id = SequenceField(primary_key=True)
+    note = StringField(max_length=250)
+    meta = {'collection': 'instruction'}
+
+    def validate(self, clean=False):
+        objects = Instruction.objects(note=self.note).first()
+        if objects and objects.note == self.note:
+            return False
+        else:
+            return True
