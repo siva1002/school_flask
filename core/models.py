@@ -149,6 +149,15 @@ class Question(Document):
    congitive_level =  StringField(max_length=20,choices={ 'application','knowledge','comprehension'},default=None)
    difficulty_level = StringField(max_length=20,choies={'medium','hard','easy'},default=None)
    meta = {'collection':'questions'}  
+class Answer(Document):
+    id = SequenceField(primary_key=True)
+    question=ReferenceField(Question,reverse_delete_rule=CASCADE,dbref=True)
+    option_a=StringField(max_length=40)
+    option_b=StringField(max_length=40)
+    option_c=StringField(max_length=40)
+    option_d=StringField(max_length=40)
+    correctanswer = StringField(choices={"option_d","option_c","option_b","option_a"})
+   
 class Instruction(Document):
     id = SequenceField(primary_key=True)
     note = StringField(max_length=250)
