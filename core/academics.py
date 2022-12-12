@@ -14,7 +14,7 @@ academics = Blueprint('academics', __name__)
 def grade():
     data = request.json
     try:
-        grade = Grade(grade=data['grade'], section=data['section'])
+        grade = Grade(**data)
         if grade.validate():
             grade.save()
             return Response(dumps({'message': f" Grade {data['grade']} Created"}), status=200)
@@ -31,7 +31,7 @@ def gradeUD(id):
         if query:
             data = request.json
             try:
-                query.update(grade=data['grade'], section=data['section'])
+                query.update(**data)
                 return Response(dumps({"message": f"Grade {query.grade} Updated "}), status=200)
             except Exception as e:
                 return Response(dumps({'message': str(e)}), status=400)
@@ -43,17 +43,22 @@ def gradeUD(id):
                 return Response(dumps({'message': str(e)}), status=400)
 
 
+'''Subject Creation'''
+
+
 @academics.route('subject/', methods=['POST'])
 def subject(id=None):
     print('POST')
     data = request.json
-    query = Subject(name=str(data['name']).upper(),
-                    code=data['code'], grade=data['grade'])
+    query = Subject(**data)
     try:
         query.save()
         return Response(dumps({'message': f"{data['name']} Created"}), status=200)
     except Exception as e:
         return Response(dumps({'message': str(e)}), status=404)
+
+
+'''Subject Update and Delete'''
 
 
 @academics.route('subject/<int:id>', methods=['PATCH', 'DELETE'])
@@ -67,7 +72,7 @@ def subjectUD(id=None):
                 code = Subject.objects(code=str(data['code'])).first()
                 print(id)
                 if code is None or code.id == id:
-                    query.update(name=data['name'], code=data['code'])
+                    query.update(**data)
                     return Response(dumps({'message': f" From Standard {str(query.grade.grade)},Subject {query.name} updated to {data['name']} "}), status=400)
                 else:
                     return Response(dumps({'message': f' {code.name} Subject code already exists'}), status=404)
@@ -80,6 +85,9 @@ def subjectUD(id=None):
         return Response(dumps({'status': 'success', "data": f"chapter {subject.name} deleted successfully"}))
 
 
+'''Chapter creation and retrieval'''
+
+
 @academics.route('chapter/', methods=['GET', 'POST'])
 # @token_required
 def chapter():
@@ -90,8 +98,7 @@ def chapter():
             subject = Subject.objects(id=data['subject_id']).first()
             if not subject:
                 return Response(dumps({'status': 'failure', 'data': "subject doesn't exists"}))
-            chapter = Chapter(name=data['name'], chapter_no=data['chapter_no'],
-                              description=data['description'], subject_id=subject)
+            chapter = Chapter(**data, subject_id=subject)
             chapter.save()
         except Exception as e:
             return Response(dumps({'message': str(e)}))
@@ -102,7 +109,10 @@ def chapter():
         return Response(dumps({'status': 'success', 'data': chapters.to_json()}), status=200)
 
 
-@ academics.route('chapter/<id>/', methods=['GET','PATCH', "DELETE"])
+'''Chapter Edit and Delete '''
+
+
+@ academics.route('chapter/<id>/', methods=['GET', 'PATCH', "DELETE"])
 def chapter_edit(id):
     chapter = Chapter.objects(id=id).first()
     if not chapter:
@@ -125,6 +135,10 @@ def chapter_edit(id):
         return Response(dumps({'status': 'success', 'data': 'chapter {} deleted successfully'.format(chapter.name)}))
     return Response(dumps({'status': 'success', 'data': chapter.to_json()}))
 
+
+'''Chapter retrieval'''
+
+
 @ academics.route('chapter-list', methods=['POST'])
 def chapter_list():
     data = request.json
@@ -146,11 +160,12 @@ def chapter_list():
     return Response(dumps({'status': 'success', 'data': chapters}))
 
 
+'''Question Creation'''
+
+
 @academics.route('question/', methods=['POST'])
 def question():
     data = request.json
-    # query = Question(grade=data['grade'],subject=data['subject'],chapter=data['subject'],
-    # question=data['question'],duration=data['duration'],mark = data['mark'],chapter_no=data['chapter_no'],question_type=data['question_type'],congitive_level=data['congitive_level'],difficulty_level=data['difficulty_level'])
     question = Question(**data['question'])
     answer = Answer(**data['answer'], question=question)
     try:
@@ -160,7 +175,8 @@ def question():
     except Exception as e:
         return Response(dumps({'staus': 'question is not created', 'data': str(e)}))
 
-@academics.route('question-list', methods=['GET','POST'])
+
+@academics.route('question-list', methods=['GET', 'POST'])
 def question_list():
     if request.method == 'GET':
         grade = request.args.get('grade')
@@ -172,13 +188,14 @@ def question_list():
             if grade_obj:
                 question_papers = question_papers(grade=grade_obj.id)
                 if subject:
-                    subject_obj = Subject.objects(grade=grade_obj.id,name=subject)
+                    subject_obj = Subject.objects(
+                        grade=grade_obj.id, name=subject)
                 if subject_obj:
                     question_papers = question_papers(subject=subject_obj.id)
             else:
-                return Response(dumps({'status':'failure','data':'check given grade'}),status=206)
+                return Response(dumps({'status': 'failure', 'data': 'check given grade'}), status=206)
         question_papers = question_paper.to_json()
-        return Response(dumps({'status':'success','data':question_paper}),status=200)
+        return Response(dumps({'status': 'success', 'data': question_paper}), status=200)
     if request.method == 'POST':
         type = request.args.get('type')
         data = request.json
@@ -207,7 +224,8 @@ def question_list():
                         cognitive = j.copitalize()
                         newlist = Question.object(
                             chapter=chapter.id, cognitive_level=cognitive)
-                        newlist = (sorted(newlist, key=lambda x: random.random()))
+                        newlist = (
+                            sorted(newlist, key=lambda x: random.random()))
                         num = int(i['cognitive_level'][j])
                         if len(newlist) >= num:
                             newlist = newlist[:num]
@@ -237,7 +255,7 @@ def question_list():
                 answers.append(ans)
             print(question_list, answers)
             context = {'data': question_list, 'grade': grade.grade,
-                    'subject': subject.name, 'register_number': user['registernumber']}
+                       'subject': subject.name, 'register_number': user['registernumber']}
             context1 = {'data': question_list, 'grade': grade.grade,
                         'subject': subject.name, 'register_number': user['registernumber'], 'answers': answers}
             answer_file, status = render_to_pdf2(
@@ -279,8 +297,8 @@ def question_list():
         return 'done'
 
 
-@ academics.route('question-paper/<id>/', methods=['GET','PATCH', "DELETE"])
-def chapter_edit(id):
+@ academics.route('question-paper/<id>/', methods=['GET', 'PATCH', "DELETE"])
+def question_paper_edit(id):
     question_paper = Question_paper.objects(id=id).first()
     if not question_paper:
         return Response(dumps({'status': 'failure', 'data': "question paper doesn't exists"}))
@@ -303,8 +321,6 @@ def chapter_edit(id):
     return Response(dumps({'status': 'success', 'data': question_paper.to_json()}))
 
 
-
-
 def question_from_question_paper():
     question_paper_id = request.args.get('question_paper')
     question_paper = Question_paper.objects(id=question_paper_id).first()
@@ -312,12 +328,12 @@ def question_from_question_paper():
     data = []
     change = False
     for id in question_list:
-        pipeline = [{"$match":id},{"$lookup": {
-    "from": "answer",
-    "localField": "_id",
-    "foreignField": 'question',
-    "as": 'answer'
-}}]
+        pipeline = [{"$match": id}, {"$lookup": {
+            "from": "answer",
+            "localField": "_id",
+            "foreignField": 'question',
+            "as": 'answer'
+        }}]
         question = Question.objects(pipeline=pipeline)
         if question:
             data.append(question.to_json())
@@ -327,6 +343,4 @@ def question_from_question_paper():
     if change:
         question_paper.question_list = question_list
         question_paper.save()
-    return Response(dumps({'status':'success','data':data}),status=200)
-
-
+    return Response(dumps({'status': 'success', 'data': data}), status=200)

@@ -71,14 +71,10 @@ def signup():
     try:
         print(request.json)
         data = request.json
-
-        user = User(email=data['email'], phone=data['phone'],
-                    registernumber=data['registernumber'], user_type=data['user_type'])
+        print(data)
+        user = User(**data['user'])
         user.save()
-        profile = Profile(fullname=data['fullname'], firstname=data["firstname"],
-                          lastname=data['lastname'], address=data['address'], user=user)
-        for i in profile:
-            print(i)
+        profile = Profile(**data['profile'], user=user)
         profile.save()
         return Response(dumps({'message': 'created'}), status=200)
     except Exception as e:
@@ -100,11 +96,9 @@ def user(id):
     elif request.method == 'PATCH':
         data = request.json
         print(data)
-        user.update(email=data['email'], phone=data['phone'],
-                    registernumber=data['registernumber'], user_type=data['user_type'])
+        user.update(**data['user'])
         profile = Profile.objects(user=int(id))
-        profile.update(fullname=data['fullname'], firstname=data["firstname"],
-                       lastname=data['lastname'], address=data['address'])
+        profile.update(**data['profile'])
         return Response(dumps({'status': 'updated successfully', 'data': user.to_json()}), status=200)
 
     elif request.method == 'DELETE':
@@ -171,3 +165,5 @@ def profile_edit():
         except Exception as error:
             return Response(dumps({'status': 'failure', 'data': str(error)}), status=204)
     return Response(dumps({'status': 'success', 'data': profile.to_json()}), status=200)
+
+# @accounts.route('student')

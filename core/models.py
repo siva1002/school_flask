@@ -11,6 +11,9 @@ from mongoengine import (
     ListField,
     DateTimeField,
     FileField,
+    EmbeddedDocumentField,
+    EmbeddedDocument,
+    DictField,
     CASCADE,
 )
 import datetime
@@ -24,7 +27,7 @@ class User(Document, UserMixin):
     phone = IntField(required=True)
     registernumber = StringField(required=True)
     usertype = StringField(
-        choices={'is-Admin', 'is-Staff', 'is-Student'}, default=None)
+        choices={'is-admin', 'is-staff', 'is-student'}, default=None)
     is_active = BooleanField(default=True)
     meta = {'collections': 'user'}
 
@@ -34,22 +37,12 @@ class User(Document, UserMixin):
     def validate(self, clean=True):
         user = User.objects
         if user(email=self.email):
-            raise ValidationError(message='email altready exists')
+            raise ValidationError(message='email already exists')
         if user(phone=self.phone):
             raise ValidationError(message='phone altready exists')
         if user(registernumber=self.registernumber):
             raise ValidationError(message='register number altready exists')
         return super().validate(clean)
-
-
-class Token(Document):
-    user_id = ReferenceField(document_type=User, reverse_delete_rule=CASCADE)
-    token_id = StringField()
-    meta = {'collections': 'token'}
-
-    def save(self, *args, **kwargs):
-        self.token_id = str(uuid.uuid4())
-        super().save(*args, **kwargs)
 
 
 class Profile(Document):
@@ -61,6 +54,16 @@ class Profile(Document):
     standard = ListField()
     user = ReferenceField(User, reverse_delete_rule=CASCADE)
     meta = {'collection': 'profile'}
+
+
+class Token(Document):
+    user_id = ReferenceField(document_type=User, reverse_delete_rule=CASCADE)
+    token_id = StringField()
+    meta = {'collections': 'token'}
+
+    def save(self, *args, **kwargs):
+        self.token_id = str(uuid.uuid4())
+        super().save(*args, **kwargs)
 
 
 class Grade(Document):
