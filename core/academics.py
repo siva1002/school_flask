@@ -149,9 +149,14 @@ def question():
 @academics.route('instruction/',methods=['POST'])
 def instructions():
     data = request.json
-    instructions_query = Instruction(note=data['note'])
-    instructions_query.save()
-    return Response(dumps({'message':'created'}),status=200)
+    try:
+      instructions_query = Instruction(note=data['note'])
+      if instructions_query.validate():
+          instructions_query.save()
+          return Response(dumps({'message':'created'}),status=200)
+      return Response(dumps({"message":"sdfsf"}))     
+    except Exception as e:
+        return Response(dumps({'message':str(e)}),status=404)     
 @academics.route('questionpaper/',methods=['POST'])
 def question_paper():
     data = request.json

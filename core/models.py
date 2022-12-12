@@ -150,8 +150,15 @@ class Question(Document):
    difficulty_level = StringField(max_length=20,choies={'medium','hard','easy'},default=None)
    meta = {'collection':'questions'}  
 class Instruction(Document):
+    id = SequenceField(primary_key=True)
     note = StringField(max_length=250)
     meta = {'collection':'instruction'}
+    def validate(self, clean=False):
+        objects = Instruction.objects(note=self.note).first()
+        if objects and objects.note == self.note:
+            return False
+        else:
+            return True
 
 class Test(Document):
     # question_paper= ReferenceField(Question_paper,reverse_delete_rule=CASCADE)
@@ -177,6 +184,7 @@ class Testresult(Document):
     unanswer_question = IntField()
     meta ={'collection':'testresult'}
 class Question_bank(Document):
+    id = SequenceField(primary_key=True)#squencefield is change the id value form objects id 
     grade = ReferenceField(Grade,reverse_delete_rule=CASCADE)
     subject = ReferenceField(Subject,reverse_delete_rule=CASCADE)
     meta = {'collection':'question_bank'}
