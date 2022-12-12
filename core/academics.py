@@ -318,7 +318,7 @@ def questionUD(id):
                 return Response(dumps({"message":str(e)}),status=400)
     return Response(dumps({"message":"Question doesn't exists"}),status=400)
 
-@academics.route('load_subject_chapter',methods=['GET'])
+@academics.route('load_subject_chapter/',methods=['GET'])
 def load_subject_chapter():
     grade_id=request.args.get('grade_id', None)
     subject_id=request.args.get('subject_id', None)
@@ -349,6 +349,12 @@ def load_test():
         subject = Subject.objects(subject = int(subject_id))
         return Response(dumps({'message':subject}),status=200)
         
+
+
+
+
+
+
 
 
 # @academics.route('load_test',methods=['GET'])
