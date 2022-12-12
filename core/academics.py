@@ -104,7 +104,7 @@ def chapter_edit(id):
         try:
             for key in data:
                 print(key)
-                setattr(chapter, key, data[key])#set arrt in  objects update a give value 
+                setattr(chapter, key, data[key])
             chapter.save()
             print(chapter)
         except Exception as e:
@@ -114,7 +114,6 @@ def chapter_edit(id):
     if request.method == "DELETE":
         chapter.delete()
         return Response(dumps({'status': 'success', 'data': 'chapter {} deleted successfully'.format(chapter.name)}))
-
 
 @ academics.route('chapter-list', methods=['POST'])
 def chapter_list():
