@@ -146,17 +146,7 @@ def question():
     return Response(dumps({'staus':'created'}))
     # except Exception as e:
     #     return Response(dumps({'staus':'question is not created','data':str(e)}))    
-@academics.route('instruction/',methods=['POST'])
-def instructions():
-    data = request.json
-    try:
-      instructions_query = Instruction(note=data['note'])
-      if instructions_query.validate():
-          instructions_query.save()
-          return Response(dumps({'message':'created'}),status=200)
-      return Response(dumps({"message":"sdfsf"}))     
-    except Exception as e:
-        return Response(dumps({'message':str(e)}),status=404)     
+  
 @academics.route('questionpaper/',methods=['POST'])
 def question_paper():
     data = request.json
@@ -207,7 +197,33 @@ def questionbank():
         answer.save()
         return Response(dumps({'staus':'created'}))
     except Exception as e:
-        return Response(dumps({'staus':'question is not created','data':str(e)}))    
+        return Response(dumps({'staus':'question is not created','data':str(e)}))  
+@academics.route('instruction/',methods=['POST'])
+def instructions():
+    data = request.json
+    try:
+      instructions_query = Instruction(note=data['note'])
+      if instructions_query.validate():
+          instructions_query.save()
+          return Response(dumps({'message':'created'}),status=200)
+      return Response(dumps({"message":"sdfsf"}))     
+    except Exception as e:
+        return Response(dumps({'message':str(e)}),status=404)  
+@academics.route('update/<int:id>',methods=['PATCH','DELETE'])     
+def instructionupdate(id):
+    update = Instruction.objects(id=id).first()  
+    if request.method=='PATCH':
+        data = request.json
+        try:
+            for y in data:
+                setattr(update,y,data[y])
+                update.save()
+                return Response(dumps({'message':'updated'}),status=200)
+        except Exception as e:
+            return Response(dumps({'message':'instruction incorrect'}),status=404)
+    if request.method=='DELETE':
+        update.delete()
+        return Response(dumps({"message":'deleted'}),status=200)
 @academics.route('question/<int:id>', methods=['PATCH', 'DELETE'])
 def questionUD(id):
     try:
