@@ -184,7 +184,13 @@ def question_paper():
     overall_mark=data['overall_mark'],no_of_question=data['no_of_question'])  
     query.save() 
     return Response(dumps({'message':'created'}),status=200) 
+
+
+
 '''test creation'''    
+
+
+
 @academics.route('test/',methods=['POST'])
 def test():
     data = request.json
@@ -213,14 +219,21 @@ def test_update(id):
 
 '''testresult'''
 
+
+
 @academics.route('testresult/',methods=['POST'])
 def testresult():
     data = request.json
     resultquery = Testresult(student_id=data['student_id'],grade=data['grade'],subject=data['subject'],test_id=data['test_id'],
     question_paper=data['question_paper'],result=data['result'],score=data['score'],correct_answer=data['correct_answer'],
     wrong_answer=data['wrong_answer'],unanswer_question=data['unanswer_question']) 
-    resultquery.save()   
-'''test restult update'''    
+    resultquery.save() 
+
+
+'''test restult update'''  
+
+
+
 @academics.route('testresult<pk>/',methods=['PATCH'])
 def resultupdate(id):
     testresult = Testresult.objects(id=id).first()
