@@ -194,9 +194,11 @@ class Test(Document):
     id = SequenceField(primary_key=True)
     question_paper = ReferenceField(
         Question_paper, reverse_delete_rule=CASCADE, dbref=True)
-    grade = ReferenceField(Grade, reverse_delete_rule=CASCADE, dbref=True)
+    grade = ReferenceField(Grade, reverse_delete_rule=CASCADE, dbref=True,)
     subject = ReferenceField(Subject, reverse_delete_rule=CASCADE, dbref=True)
     duration = IntField()
+    created_staff_id = ReferenceField(
+        User, reverse_delete_rule=CASCADE, dbref=True)
     mark = IntField()
     remarks = StringField(max_length=250)
     description = StringField(max_length=100)
@@ -205,6 +207,13 @@ class Test(Document):
     meta = {'collection': 'test'}
 
     def validate(self, clean=False):
+        if not self.grade:
+            raise ValidationError(message="grade dosn't exists")
+        if not self.subject:
+            raise ValidationError(message="subject dosn't exists")
+        if not self.created_staff_id:
+            raise ValidationError(
+                message="your not logged in or you don't have a access to do that")
         if not self.test_uid:
             self.test_uid = (str(uuid.uuid4()))[:16]
         if not self.duration:
@@ -225,9 +234,25 @@ class Testresult(Document):
     result = StringField(max_length=20)
     score = IntField()
     correct_answer = IntField()
-    worong_answer = IntField()
+    wrong_answer = IntField()
     unanswer_question = IntField()
+    test_details = ListField(DictField())
+    created_at = DateTimeField(default=datetime.datetime.now())
     meta = {'collection': 'testresult'}
+
+    def validate(self, clean=False):
+        if not self.student_id:
+            raise ValidationError(
+                message="student doesn't exists")
+        if not self.grade:
+            raise ValidationError(message="grade dosn't exists")
+        if not self.subject:
+            raise ValidationError(message="subject dosn't exists")
+        if not self.question_paper:
+            raise ValidationError(message="question paper dosn't exists")
+        if not self.test_id:
+            raise ValidationError(message="test dosn't exists")
+        return super().validate(clean)
 
 
 class Question_bank(Document):

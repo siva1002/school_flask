@@ -192,11 +192,7 @@ def question_list():
                 if subject:
                     subject_obj = Subject.objects(
                         grade=grade_obj.id, name=subject).first()
-                    # for i in subject_obj:
-                    # print(getattr(subject_obj, i))
-                    print(subject_obj)
                 if subject_obj:
-                    print(subject_obj.id)
                     question_papers = question_papers(subject=subject_obj.id)
             else:
                 return Response(dumps({'status': 'failure', 'data': 'check given grade'}), status=206)
@@ -209,8 +205,6 @@ def question_list():
             data['timing'] = int(data['timing'])
         if 'overall_marks' in data:
             data['overall_marks'] = int(data['overall_marks'])
-        # print(data['timing'], data['overall_marks'])
-        question_details_list = []
         list_of_questions = data['list_of_questions']
         grade = Grade.objects(grade=data['grade']).first()
         if not grade:
@@ -218,92 +212,91 @@ def question_list():
         subject = Subject.objects(id=data['subject']).first()
         if not subject:
             return Response(dumps({'status': 'failure', 'data': "subject doesn't exists"}))
-        # try:
-        user = loads(session['user'])
-        questions = []
-        if 'customize' in data and data['customize']:
-            customize = data['customize']
-            for i in customize:
-                chapter = Chapter.objects(id=i['id'])
-                for j in i['cognitive_level']:
-                    try:
-                        cognitive = j.copitalize()
-                        newlist = Question.object(
-                            chapter=chapter.id, cognitive_level=cognitive)
-                        newlist = (
-                            sorted(newlist, key=lambda x: random.random()))
-                        num = int(i['cognitive_level'][j])
-                        if len(newlist) >= num:
-                            newlist = newlist[:num]
-                            questions.append(newlist)
-                        else:
-                            return Response(dumps({'status': 'failure', 'data': ('Required questions not available in {} level in chapter {}. Available number of questions is {}').format(cognitive, chapter, len(newlist))}), status=206)
-                    except Exception as e:
-                        return Response({"status": "failure", "data": "given details are incorrect"}, status=206)
-            questions = [item for sublist in questions for item in sublist]
-        else:
-            if save_obj:
-                save_obj = save_obj.lower()
-            for i in list_of_questions:
-                j = Question.objects(id=i).first()
-                if j:
-                    print(j)
-                    questions.append(j)
-            # answers
-            answers = []
-            question_list = []
-            for question in questions:
-                answer_obj = Answer.objects(id=question.answer).first()
-                ans = getattr(answer_obj, str(answer_obj.correctanswer))
-                question_list.append(question.question)
-                answers.append(ans)
-            print(question_list, answers)
-            context = {'data': question_list, 'grade': grade.grade,
-                       'subject': subject.name, 'register_number': user['registernumber']}
-            context1 = {'data': question_list, 'grade': grade.grade,
-                        'subject': subject.name, 'register_number': user['registernumber'], 'answers': answers}
-            answer_file, status = render_to_pdf2(
-                'answer_file.html', 'answer_files', None, context1)
-        #     # save question_paper in data_base
-            print(answer_file)
-            if save_obj == 'save':
-                cal_timing = 0
-                cal_overall_marks = 0
-                for i in questions:
-                    print(int(i.duration))
-                    cal_timing += int(i.duration)
-                    cal_overall_marks += int(i.mark)
-                if not data['timing']:
-                    data['timing'] = cal_timing
-                if not data['overall_marks']:
-                    data['overall_marks'] = cal_overall_marks
-                created_by = user['email']
-                question_paper = Question_paper(
-                    grade=grade, subject=subject, created_by=created_by, timing=data['timing'], overall_marks=data['overall_marks'])
-                # question_paper.save()
-                # print(question_paper.to_json)
-        #         print(question_paper)
-                question_id_list = []
+        try:
+            user = loads(session['user'])
+            questions = []
+            if 'customize' in data and data['customize']:
+                customize = data['customize']
+                for i in customize:
+                    chapter = Chapter.objects(id=i['id']).first()
+                    for j in i['cognitive_level']:
+                        try:
+                            cognitive = j.copitalize()
+                            newlist = Question.object(
+                                chapter=chapter.id, cognitive_level=cognitive)
+                            newlist = (
+                                sorted(newlist, key=lambda x: random.random()))
+                            num = int(i['cognitive_level'][j])
+                            if len(newlist) >= num:
+                                newlist = newlist[:num]
+                                questions.append(newlist)
+                            else:
+                                return Response(dumps({'status': 'failure', 'data': ('Required questions not available in {} level in chapter {}. Available number of questions is {}').format(cognitive, chapter, len(newlist))}), status=206)
+                        except Exception as e:
+                            return Response({"status": "failure", "data": "given details are incorrect"}, status=206)
+                questions = [item for sublist in questions for item in sublist]
+            else:
+                if save_obj:
+                    save_obj = save_obj.lower()
+                for i in list_of_questions:
+                    j = Question.objects(id=i).first()
+                    if j:
+                        print(j)
+                        questions.append(j)
+                # answers
+                answers = []
+                question_list = []
                 for question in questions:
-                    question_id_list.append(question.id)
-                question_paper.question_list = question_id_list
-                for i in range(0, len(questions)):
-                    questions[i] = questions[i].to_json()
-                question_paper, status = render_to_pdf2(
-                    'question.html', 'question_files', question_paper, context)
-                question_paper.save()
-                print(type(question_paper))
+                    answer_obj = Answer.objects(id=question.answer).first()
+                    ans = getattr(answer_obj, str(answer_obj.correctanswer))
+                    question_list.append(question.question)
+                    answers.append(ans)
+                print(question_list, answers)
+                context = {'data': question_list, 'grade': grade.grade,
+                           'subject': subject.name, 'register_number': user['registernumber']}
+                context1 = {'data': question_list, 'grade': grade.grade,
+                            'subject': subject.name, 'register_number': user['registernumber'], 'answers': answers}
+                answer_file, status = render_to_pdf2(
+                    'answer_file.html', 'answer_files', None, context1)
+            #     # save question_paper in data_base
+                print(answer_file)
+                if save_obj == 'save':
+                    cal_timing = 0
+                    cal_overall_marks = 0
+                    for i in questions:
+                        print(int(i.duration))
+                        cal_timing += int(i.duration)
+                        cal_overall_marks += int(i.mark)
+                    if not data['timing']:
+                        data['timing'] = cal_timing
+                    if not data['overall_marks']:
+                        data['overall_marks'] = cal_overall_marks
+                    created_by = user['email']
+                    question_paper = Question_paper(
+                        grade=grade, subject=subject, created_by=created_by, timing=data['timing'], overall_marks=data['overall_marks'])
+                    # question_paper.save()
+                    # print(question_paper.to_json)
+            #         print(question_paper)
+                    question_id_list = []
+                    for question in questions:
+                        question_id_list.append(question.id)
+                    question_paper.question_list = question_id_list
+                    for i in range(0, len(questions)):
+                        questions[i] = questions[i].to_json()
+                    question_paper, status = render_to_pdf2(
+                        'question.html', 'question_files', question_paper, context)
+                    question_paper.save()
+                    print(type(question_paper))
+                    if not status:
+                        return Response({"status": "failure", "data": "given details are incorrect"}, status=206)
+                    return Response(dumps({'status': 'success', 'data': question_paper.to_json(), 'question_details': questions, 'questions': question_list, 'answer-file-path': '/media/answer_files/{answer_file}.pdf', 'subject_id': subject.id, 'grade_id': grade.id}), status=200)
+                filename, status = render_to_pdf2(
+                    'question.html', 'question_papers', None, context)
                 if not status:
                     return Response({"status": "failure", "data": "given details are incorrect"}, status=206)
-                return Response(dumps({'status': 'success', 'data': question_paper.to_json(), 'question_details': questions, 'questions': question_list, 'answer-file-path': '/media/answer_files/{answer_file}.pdf', 'subject_id': subject.id, 'grade_id': grade.id}), status=200)
-            filename, status = render_to_pdf2(
-                'question.html', 'question_papers', None, context)
-            if not status:
-                return Response({"status": "failure", "data": "given details are incorrect"}, status=206)
-            return Response(dumps({'status': 'success', 'question_path': f'/media/question_paper/{filename}.pdf', 'answer_path': f'/media/answer_files/{answer_file}.pdf', 'subject_id': subject.id, 'grade_id': grade.id}), status=200)
-        # except:
-        #     return Response({"status": "failure", "data": "given details are incorrect"}, status=HTTP_206_PARTIAL_CONTENT)
-        return 'done'
+                return Response(dumps({'status': 'success', 'question_path': f'/media/question_paper/{filename}.pdf', 'answer_path': f'/media/answer_files/{answer_file}.pdf', 'subject_id': subject.id, 'grade_id': grade.id}), status=200)
+        except Exception as e:
+            return Response({"status": "failure", "data": str(e)}, status=200)
 
 
 @ academics.route('question-paper/<id>/', methods=['GET', 'PATCH', "DELETE"])
@@ -361,31 +354,28 @@ def question_from_question_paper():
 
 @academics.route('test/', methods=['GET', 'POST'])
 def test():
+    user = loads(session['user'])
     if request.method == 'GET':
-        test = Test.objects
         grade = request.args.get('grade')
-        if grade:
-            grade_obj = Grade.objects(grade=grade).first()
-            print(grade_obj)
-            if not grade_obj:
-                return Response(dumps({'status': 'failure', 'data': "grade doesn't exists"}))
-            test = test(grade=grade_obj.id)
         test_uid = request.args.get('test_uid')
-        if test_uid:
-            test = test(test_uid=test_uid).first()
-            if not test:
-                return Response(dumps({'status': 'failure', 'data': "please give valid test uid"}))
-            else:
+        test = Test.objects
+        try:
+            if grade:
+                grade_obj = Grade.objects(grade=grade).first()
+                test = test(grade=grade_obj.id)
+            if test_uid:
+                test = test(test_uid=test_uid).first()
                 return Response(dumps({"status": "success", 'data': test.to_json()}), status=200)
+            return Response(dumps({"status": "success", 'data': test.to_json()}), status=200)
+        except Exception as e:
+            return Response(dumps({"status": "failure", "data": str(e)}), status=206)
     if request.method == 'POST':
         try:
             data = request.json
             data['grade'] = Grade.objects(id=data['grade']).first()
-            if not data['grade']:
-                return Response(dumps({'status': 'failure', 'data': "grade doesn't exists"}))
             data['subject'] = Subject.objects(id=data['subject']).first()
-            if not data['subject']:
-                return Response(dumps({'status': 'failure', 'data': "subject doesn't exists"}))
+            data['created_staff_id'] = User.objects(
+                id=user['_id'], usertype__ne='is_student').first()
             data['question_paper'] = Question_paper.objects(
                 id=data['question_paper']).first()
             if not data['question_paper']:
@@ -399,37 +389,94 @@ def test():
         except Exception as e:
             return Response(dumps({"status": "failure", "data": str(e)}), status=206)
         return Response(dumps({"status": "success", 'data': test_query.to_json()}), status=201)
-    return Response(dumps({"status": "success", 'data': test.to_json()}), status=200)
 
 
-# @academics.route('test/<id>', methods=['GET', 'PATCH', 'DELETE'])
-# def test_edit(id):
+@academics.route('test/<id>', methods=['GET', 'PATCH', 'DELETE'])
+def test_edit(id):
+    test = Testresult.objects(id=id).first()
+    if not test:
+        return Response(dumps({'status': 'failure', 'data': "test doesn't exists"}))
+    if request.method == 'PATCH':
+        data = request.json
+        try:
+            for key in data:
+                setattr(test, key, data[key])
+                test.save()
+        except Exception as e:
+            return Response(dumps({'message': 'incorrect', 'data': str(e)}), status=206)
+        return Response(dumps({'message': 'success', 'data': test.to_json()}), status=200)
+    if request.mehtod == 'DELETE':
+        test_uid = test.test_uid
+        question_paper = Question_paper.objects(test_uid=test_uid).first()
+        if question_paper:
+            question_paper.test_uid = None
+            question_paper.save()
+        test.delete()
+        return Response(dumps({'message': 'deleted'}), status=202)
 
-    # @academics.route('testresult/', methods=['POST'])
-    # def testresult():
-    #     data = request.json
-    #     resultquery = Testresult(student_id=data['student_id'], grade=data['grade'], subject=data['subject'], test_id=data['test_id'],
-    #                              question_paper=data['question_paper'], result=data['result'], score=data[
-    #                                  'score'], correct_answer=data['correct_answer'],
-    #                              wrong_answer=data['wrong_answer'], unanswer_question=data['unanswer_question'])
-    #     resultquery.save()
-    # @academics.route('testresult<pk>/', methods=['PATCH'])
-    # def resultupdate(id):
-    #     testresult = Testresult.objects(id=id).first()
-    #     if not testresult:
-    #         return Response(dumps({'message': 'not match'}))
-    #     if request.method == "PATCH":
-    #         data = request.json
-    #         try:
-    #             for x in data:
-    #                 setattr(testresult, x, data[x])
-    #                 testresult.save()
-    #                 return Response(dumps({'message': 'updated'}), status=200)
-    #         except Exception as e:
-    #             return Response(dumps({"status": 'incorrectid', 'data': str(e)}), status=404)
-    #     if request.method == 'DELETE':
-    #         testresult.delete()
-    #         return Response(dumps({"status": "id_deleted"}), status=200)
+
+@academics.route('testresult/', methods=['GET', 'POST'])
+def test_result():
+    user = loads(session['user'])
+    if request.method == 'GET':
+        grade = request.args.get('grade')
+        test_id = request.args.get('test_id')
+        student_id = request.args.get('student_id')
+        test_result = Testresult.objects
+
+        try:
+            if grade:
+                grade_obj = Grade.objects(grade=grade).get()
+                test_result = test_result(grade=grade_obj.id)
+            if test_id:
+                test_result = test_result(test_id=test_id).get()
+                return Response(dumps({'status': 'success', 'data': test_result.to_json()}), status=200)
+            if student_id:
+                student = User.objects(
+                    id=student_id, usertype='is_student').get()
+                test_result = test_result(student_id=student.id)
+            return Response(dumps({"status": "success", 'data': test_result.to_json()}), status=200)
+        except Exception as e:
+            return Response(dumps({'status': 'success', 'data': str(e)}), status=206)
+
+    if request.method == 'POST':
+        try:
+            data = request.json
+            data['grade'] = Grade.objects(id=data['grade']).first()
+            data['subject'] = Subject.objects(id=data['subject']).first()
+            data['question_paper'] = Question_paper.objects(
+                id=data['question_paper']).first()
+            data['student_id'] = User.objects(
+                id=user['_id'], usertype='is_student').first()
+            data['test_id'] = Test.objects(id=data['test_id']).first()
+            resultquery = Testresult(student_id=data['student_id'], grade=data['grade'], subject=data['subject'], test_id=data['test_id'],
+                                     question_paper=data['question_paper'], result=data['result'], score=data[
+                'score'], correct_answer=data['correct_answer'],
+                wrong_answer=data['wrong_answer'], unanswer_question=data['unanswer_question'], test_details=data['test_details'])
+            resultquery.save()
+        except Exception as e:
+            return Response(dumps({"status": "failure", "data": str(e)}), status=206)
+        return Response(dumps({"status": "success", 'data': resultquery.to_json()}), status=201)
+
+
+@academics.route('testresult/<id>', methods=['PATCH'])
+def resultupdate(id):
+    testresult = Testresult.objects(id=id).first()
+    if not testresult:
+        return Response(dumps({'status': 'failure', 'data': "test result dosn't exists"}))
+    if request.method == "PATCH":
+        data = request.json
+        try:
+            for x in data:
+                setattr(testresult, x, data[x])
+                testresult.save()
+                return Response(dumps({'status': 'success', 'data': testresult.to_json()}), status=200)
+        except Exception as e:
+            return Response(dumps({"status": 'failure', 'data': str(e)}), status=206)
+    if request.method == 'DELETE':
+        testresult.delete()
+        return Response(dumps({"status": "success", 'data': 'deleted'}), status=200)
+
     # @academics.route('questionbank/', methods=['POST'])
     # def questionbank():
     #     data = request.json
