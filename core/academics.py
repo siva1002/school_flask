@@ -186,18 +186,23 @@ def question_list():
         if grade:
             grade_obj = Grade.objects(grade=grade).first()
             if grade_obj:
+                print(grade_obj)
                 question_papers = question_papers(grade=grade_obj.id)
                 if subject:
                     subject_obj = Subject.objects(
-                        grade=grade_obj.id, name=subject)
+                        grade=grade_obj.id, name=subject).first()
+                    # for i in subject_obj:
+                    # print(getattr(subject_obj, i))
+                    print(subject_obj)
                 if subject_obj:
+                    print(subject_obj.id)
                     question_papers = question_papers(subject=subject_obj.id)
             else:
                 return Response(dumps({'status': 'failure', 'data': 'check given grade'}), status=206)
-        question_papers = question_paper.to_json()
-        return Response(dumps({'status': 'success', 'data': question_paper}), status=200)
+        question_papers = question_papers.to_json()
+        return Response(dumps({'status': 'success', 'data': question_papers}), status=200)
     if request.method == 'POST':
-        type = request.args.get('type')
+        save_obj = request.args.get('type')
         data = request.json
         if 'timing' in data:
             data['timing'] = int(data['timing'])
@@ -215,7 +220,7 @@ def question_list():
         # try:
         user = loads(session['user'])
         questions = []
-        if 'customized' in data and data['customize']:
+        if 'customize' in data and data['customize']:
             customize = data['customize']
             for i in customize:
                 chapter = Chapter.objects(id=i['id'])
@@ -236,16 +241,14 @@ def question_list():
                         return Response({"status": "failure", "data": "given details are incorrect"}, status=206)
             questions = [item for sublist in questions for item in sublist]
         else:
-            if type:
-                type = type.lower()
+            if save_obj:
+                save_obj = save_obj.lower()
             for i in list_of_questions:
-                # try:
                 j = Question.objects(id=i).first()
-                print(j)
-                questions.append(j)
-                # except:
-                # continue
-        #     # answers
+                if j:
+                    print(j)
+                    questions.append(j)
+            # answers
             answers = []
             question_list = []
             for question in questions:
@@ -259,10 +262,10 @@ def question_list():
             context1 = {'data': question_list, 'grade': grade.grade,
                         'subject': subject.name, 'register_number': user['registernumber'], 'answers': answers}
             answer_file, status = render_to_pdf2(
-                'question.html', 'answer_files', None, context1)
+                'answer_file.html', 'answer_files', None, context1)
         #     # save question_paper in data_base
             print(answer_file)
-            if type == 'save':
+            if save_obj == 'save':
                 cal_timing = 0
                 cal_overall_marks = 0
                 for i in questions:
@@ -274,24 +277,29 @@ def question_list():
                 if not data['overall_marks']:
                     data['overall_marks'] = cal_overall_marks
                 created_by = user['email']
-
-                question_paper = Question_paper(grade=grade, subject=subject, created_by=created_by,
-                                                question_list=list_of_questions, timing=data['timing'], overall_marks=data['overall_marks'])
-                question_paper.save()
-                print(question_paper.to_json)
+                question_paper = Question_paper(
+                    grade=grade, subject=subject, created_by=created_by, timing=data['timing'], overall_marks=data['overall_marks'])
+                # question_paper.save()
+                # print(question_paper.to_json)
         #         print(question_paper)
-        #         for question in questions:
-        #             question_paper.no_of_questions.append(question.id)
-        #         question_paper, status = render_to_pdf2(
-        #             'academics/question.html', 'question_files', question_paper, context)
-        #         if not status:
-        #             return Response({"status": "failure", "data": "given details are incorrect"}, status=HTTP_206_PARTIAL_CONTENT)
-        #         serializer = QuestionPaperSerializer(question_paper)
-        #         return Response({'status':'success','data':serializer.data,'question_details':serializer_for_questions.data,'questions':question_list,'answer-file-path':'/media/answer_files/{answer_file}.pdf','subject_id':subject_obj.id,'grade_id':grade.id},status=HTTP_200_OK)
-        #     filename,status = render_to_pdf2('academics/question.html','question_paper',None,context)
-        #     if not status:
-        #         return Response({"status": "failure", "data": "given details are incorrect"}, status=HTTP_206_PARTIAL_CONTENT)
-        #     return Response({'status': 'success', 'question_path': f'/media/question_paper/{filename}.pdf', 'answer_path': f'/media/answer_files/{answer_file}.pdf', 'subject_id': subject_obj.id, 'grade_id': grade.id})
+                question_id_list = []
+                for question in questions:
+                    question_id_list.append(question.id)
+                question_paper.question_list = question_id_list
+                for i in range(0, len(questions)):
+                    questions[i] = questions[i].to_json()
+                question_paper, status = render_to_pdf2(
+                    'question.html', 'question_files', question_paper, context)
+                question_paper.save()
+                print(type(question_paper))
+                if not status:
+                    return Response({"status": "failure", "data": "given details are incorrect"}, status=206)
+                return Response(dumps({'status': 'success', 'data': question_paper.to_json(), 'question_details': questions, 'questions': question_list, 'answer-file-path': '/media/answer_files/{answer_file}.pdf', 'subject_id': subject.id, 'grade_id': grade.id}), status=200)
+            filename, status = render_to_pdf2(
+                'question.html', 'question_papers', None, context)
+            if not status:
+                return Response({"status": "failure", "data": "given details are incorrect"}, status=206)
+            return Response(dumps({'status': 'success', 'question_path': f'/media/question_paper/{filename}.pdf', 'answer_path': f'/media/answer_files/{answer_file}.pdf', 'subject_id': subject.id, 'grade_id': grade.id}), status=200)
         # except:
         #     return Response({"status": "failure", "data": "given details are incorrect"}, status=HTTP_206_PARTIAL_CONTENT)
         return 'done'
@@ -321,22 +329,26 @@ def question_paper_edit(id):
     return Response(dumps({'status': 'success', 'data': question_paper.to_json()}))
 
 
+@academics.route('question_from_question_paper', methods=['GET'])
 def question_from_question_paper():
     question_paper_id = request.args.get('question_paper')
     question_paper = Question_paper.objects(id=question_paper_id).first()
-    question_list = Question_paper.question_list
+    question_list = question_paper.question_list
     data = []
     change = False
-    for id in question_list:
-        pipeline = [{"$match": id}, {"$lookup": {
+    # print(question_list, type(question_list))
+    for id in list(question_list):
+        pipeline = [{"$match": {"_id": id}}, {"$lookup": {
             "from": "answer",
-            "localField": "_id",
-            "foreignField": 'question',
-            "as": 'answer'
+            "localField": "answer",
+            "foreignField": "_id",
+            "as": "answer"
         }}]
-        question = Question.objects(pipeline=pipeline)
+        question = list(Question.objects.aggregate(pipeline=pipeline))[0]
+        print(question)
         if question:
-            data.append(question.to_json())
+            question['created_at'] = str(question['created_at'])
+            data.append(question)
         else:
             question_list.remove(id)
             change = True

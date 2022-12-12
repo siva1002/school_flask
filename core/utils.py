@@ -1,8 +1,12 @@
 from .models import Token, User
-from flask import render_template,make_response,session,request
+from flask import render_template, make_response, session, request
 from functools import wraps
 import os
 import pdfkit
+from io import BytesIO
+from xhtml2pdf import pisa
+import uuid
+
 
 def token_required(f):
     @wraps(f)
@@ -27,31 +31,26 @@ def token_required(f):
 
 
 def render_to_pdf2(template_src, folder_name, question_paper, params: dict):
+    print(params)
     file_path = os.path.dirname(os.path.realpath(__file__))
     list = file_path.split('/')
     list.pop()
     file_path = '/'.join(list)
-    # print(file_path)
+
     html = render_template(
         template_src,
-        params=params
+        data=params
     )
-
-    # return 
-    # print(questionb)
-    # template = get_template(template_src)
     folder_name = folder_name
-    # html = template.render(params)
-    # result = BytesIO()
-    # filename = str(uuid.uuid4())
-    # pdf = pisa.pisaDocument(BytesIO(html.encode("UTF-8")), result)
-    # exists = False
+    result = BytesIO()
+    filename = str(uuid.uuid4())
+    pdf = pisa.pisaDocument(BytesIO(html.encode("UTF-8")), result)
+    exists = False
 
     if not question_paper:
         grade = params['grade']
         subject = params['subject']
         register_number = params['register_number']
-
         for file in os.listdir((str(file_path)+f'/media/{folder_name}/')):
             filename = (str(file))
             if register_number in filename:
@@ -59,20 +58,18 @@ def render_to_pdf2(template_src, folder_name, question_paper, params: dict):
         filename = f'grade-{grade}&&subject-{subject}{register_number}'
         try:
             if exists:
-                os.rename((file_path+f'/media/{folder_name}/{file}'), (file_path+f'/media/{folder_name}/{filename}.pdf'))
+                os.rename((file_path+f'/media/{folder_name}/{file}'),
+                          (file_path+f'/media/{folder_name}/{filename}.pdf'))
             with open(file_path+f'/media/{folder_name}/{filename}.pdf', 'wb+') as output:
-                # pdf = pisa.pisaDocument(BytesIO(html.encode("UTF-8")), output)
-                response = make_response(html,False)
-                response.headers["Content-Type"] = "application/pdf"
+                pdf = pisa.pisaDocument(BytesIO(html.encode("UTF-8")), output)
         except Exception as e:
             print(e)
         return filename, True
-    # questionfile = SimpleUploadedFile(
-    #     filename+'.pdf', result.getvalue(), content_type='application/pdf')
-    # print(questionfile)
-    # question_paper.file = questionfile
+    filename = filename + '.pdf'
+    pdf = pdf.text
+    question_paper.file.put(pdf, encoding='utf-8', filename=filename)
     # question_paper.save()
-    # return question_paper, True
+    return question_paper, True
 
 
 # def index():

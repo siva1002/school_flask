@@ -175,7 +175,7 @@ class Answer(Document):
 
 
 class Question_paper(Document):
-    id = SequenceField()
+    id = SequenceField(primary_key=True)
     grade = ReferenceField(Grade, reverse_delete_rule=CASCADE)
     subject = ReferenceField(Subject, reverse_delete_rule=CASCADE)
     file = FileField(upload_to='question_files/')
