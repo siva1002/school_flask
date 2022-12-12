@@ -202,6 +202,36 @@ class Question_bank(Document):
     grade = ReferenceField(Grade,reverse_delete_rule=CASCADE)
     subject = ReferenceField(Subject,reverse_delete_rule=CASCADE)
     meta = {'collection':'question_bank'}
+
+
+
+
+
+
+
+# class Question_bank(Document):
+#     grade = ReferenceField(Grade,reverse_delete_rule=CASCADE)
+#     subject = ReferenceField(Subject,reverse_delete_rule=CASCADE)
+#     meta = {'collection':'question_bank'}
+
+
+
+
+
+
+
+
+
+
+
+#    def clean(self):
+#        question = Question.objects()
+#        if question:
+#          self.id = question.count()  
+#        else:
+#         self.id = 0
+#    def save(self,*args,**kwargs):
+#         super().save(*args,**kwargs) 
     id = SequenceField(primary_key=True)
     grade = ReferenceField(Grade, reverse_delete_rule=CASCADE)
     subject = ReferenceField(Subject, reverse_delete_rule=CASCADE)
@@ -218,6 +248,7 @@ class Question_bank(Document):
     difficulty_level = StringField(
         max_length=20, choies={'medium', 'hard', 'easy'}, default=None)
     answer = IntField(min_value=0)
+    # answer=
     meta = {'collection': 'questions'}
 
 

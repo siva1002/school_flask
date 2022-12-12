@@ -193,6 +193,22 @@ def test():
     mark = data['mark'],remarks=data['remarks'],description=data['description'],
     test_id=data['test_id'],pass_percentage=data['pass_percentage'])
     test_query.save()
+@academics.route('testupdate/<id>',methods=['PATCH'])
+def test_update(id):
+    test = Testresult.objects(id=id).first()
+    if request.method=='PATCH':
+        data = request.json
+        try:
+            for key in data:
+                setattr(test,key,data[key])
+                test.save()
+        except Exception as e:
+            return Response(dumps({'message':'incorrect','data':str(e)}),status=404)
+        return Response(dumps({'message':'success', 'data':test.to_json()})) 
+    if request.mehtod=='DELETE':
+        test.delete()
+        return Response(dumps({'message':'deleted'}),status=202)  
+    
 
 
 '''testresult'''
@@ -218,7 +234,7 @@ def resultupdate(id):
                 testresult.save()
                 return Response(dumps({'message':'updated'}),status=200)
         except Exception as e:
-            return Response(dumps({"status":'incorrectid','data':str(e)}),status=404)    
+            return Response(dumps({"status":'incorrect_id','data':str(e)}),status=404)    
     if request.method=='DELETE':
         testresult.delete()
         return Response(dumps({"status":"id_deleted"}),status=200)
@@ -238,7 +254,11 @@ def questionbank():
         return Response(dumps({'staus': 'created'}))
     except Exception as e:
         return Response(dumps({'staus':'question is not created','data':str(e)}))  
-'''Instruction creation '''         
+
+
+'''Instruction creation '''    
+
+
 @academics.route('instruction/',methods=['POST'])
 def instructions():
     data = request.json
@@ -251,7 +271,9 @@ def instructions():
     except Exception as e:
         return Response(dumps({'message':str(e)}),status=404)  
 
+
 ''' instruction update and delete'''     
+
 
 @academics.route('update/<int:id>',methods=['PATCH','DELETE'])     
 def instructionupdate(id):
