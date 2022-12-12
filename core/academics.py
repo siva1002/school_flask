@@ -323,7 +323,7 @@ def question_paper_edit(id):
     return Response(dumps({'status': 'success', 'data': question_paper.to_json()}))
 
 
-@academics.route('question_from_question_paper', methods=['GET'])
+@academics.route('test-questions', methods=['GET'])
 def question_from_question_paper():
     question_paper_id = request.args.get('question_paper')
     question_paper = Question_paper.objects(id=question_paper_id).first()
@@ -372,20 +372,18 @@ def test():
     if request.method == 'POST':
         try:
             data = request.json
-            data['grade'] = Grade.objects(id=data['grade']).first()
-            data['subject'] = Subject.objects(id=data['subject']).first()
+            data['grade'] = Grade.objects(id=data['grade']).get()
+            data['subject'] = Subject.objects(id=data['subject']).get()
             data['created_staff_id'] = User.objects(
-                id=user['_id'], usertype__ne='is_student').first()
+                id=user['_id'], usertype__ne='is_student').get()
             data['question_paper'] = Question_paper.objects(
-                id=data['question_paper']).first()
-            if not data['question_paper']:
-                return Response(dumps({'status': 'failure', 'data': "question paper doesn't exists"}))
+                id=data['question_paper']).get()
             test_query = Test(**data)
             question_paper = data['question_paper']
             test_query.save()
-            test = Test.objects(question_paper=question_paper).first()
+            test = Test.objects(question_paper=question_paper).get()
             question_paper.test_uid = test.test_uid
-            question_paper.save()
+            # question_paper.save()
         except Exception as e:
             return Response(dumps({"status": "failure", "data": str(e)}), status=206)
         return Response(dumps({"status": "success", 'data': test_query.to_json()}), status=201)
@@ -442,13 +440,13 @@ def test_result():
     if request.method == 'POST':
         try:
             data = request.json
-            data['grade'] = Grade.objects(id=data['grade']).first()
-            data['subject'] = Subject.objects(id=data['subject']).first()
+            data['grade'] = Grade.objects(id=data['grade']).get()
+            data['subject'] = Subject.objects(id=data['subject']).get()
             data['question_paper'] = Question_paper.objects(
-                id=data['question_paper']).first()
+                id=data['question_paper']).get()
             data['student_id'] = User.objects(
-                id=user['_id'], usertype='is_student').first()
-            data['test_id'] = Test.objects(id=data['test_id']).first()
+                id=user['_id'], usertype='is_student').get()
+            data['test_id'] = Test.objects(id=data['test_id']).get()
             resultquery = Testresult(student_id=data['student_id'], grade=data['grade'], subject=data['subject'], test_id=data['test_id'],
                                      question_paper=data['question_paper'], result=data['result'], score=data[
                 'score'], correct_answer=data['correct_answer'],
@@ -467,8 +465,8 @@ def resultupdate(id):
     if request.method == "PATCH":
         data = request.json
         try:
-            for x in data:
-                setattr(testresult, x, data[x])
+            for key in data:
+                setattr(testresult, key, data[key])
                 testresult.save()
                 return Response(dumps({'status': 'success', 'data': testresult.to_json()}), status=200)
         except Exception as e:
@@ -476,9 +474,3 @@ def resultupdate(id):
     if request.method == 'DELETE':
         testresult.delete()
         return Response(dumps({"status": "success", 'data': 'deleted'}), status=200)
-
-    # @academics.route('questionbank/', methods=['POST'])
-    # def questionbank():
-    #     data = request.json
-    #     question = Question(**data['question'])
-    #     answer = Answer(**data['answer'], question=question)
