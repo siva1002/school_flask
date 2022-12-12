@@ -176,6 +176,52 @@ def question():
         return Response(dumps({'staus': 'question is not created', 'data': str(e)}))
 
 
+@academics.route('test/', methods=['POST'])
+def test():
+    data = request.json
+    test_query = Test(question_paper=data['question_paper'], grade=data['grade'],
+                      subject=data['subject'], duration=data['subject'],
+                      mark=data['mark'], remarks=data['remarks'], description=data['description'],
+                      test_id=data['test_id'], pass_percentage=data['pass_percentage'])
+    test_query.save()
+
+
+@academics.route('testresult/', methods=['POST'])
+def testresult():
+    data = request.json
+    resultquery = Testresult(student_id=data['student_id'], grade=data['grade'], subject=data['subject'], test_id=data['test_id'],
+                             question_paper=data['question_paper'], result=data['result'], score=data[
+                                 'score'], correct_answer=data['correct_answer'],
+                             wrong_answer=data['wrong_answer'], unanswer_question=data['unanswer_question'])
+    resultquery.save()
+
+
+@academics.route('testresult<pk>/', methods=['PATCH'])
+def resultupdate(id):
+    testresult = Testresult.objects(id=id).first()
+    if not testresult:
+        return Response(dumps({'message': 'not match'}))
+    if request.method == "PATCH":
+        data = request.json
+        try:
+            for x in data:
+                setattr(testresult, x, data[x])
+                testresult.save()
+                return Response(dumps({'message': 'updated'}), status=200)
+        except Exception as e:
+            return Response(dumps({"status": 'incorrectid', 'data': str(e)}), status=404)
+    if request.method == 'DELETE':
+        testresult.delete()
+        return Response(dumps({"status": "id_deleted"}), status=200)
+
+
+@academics.route('questionbank/', methods=['POST'])
+def questionbank():
+    data = request.json
+    question = Question(**data['question'])
+    answer = Answer(**data['answer'], question=question)
+
+
 @academics.route('question-list', methods=['GET', 'POST'])
 def question_list():
     if request.method == 'GET':
@@ -329,30 +375,30 @@ def question_paper_edit(id):
     return Response(dumps({'status': 'success', 'data': question_paper.to_json()}))
 
 
-@academics.route('question_from_question_paper', methods=['GET'])
-def question_from_question_paper():
-    question_paper_id = request.args.get('question_paper')
-    question_paper = Question_paper.objects(id=question_paper_id).first()
-    question_list = question_paper.question_list
-    data = []
-    change = False
-    # print(question_list, type(question_list))
-    for id in list(question_list):
-        pipeline = [{"$match": {"_id": id}}, {"$lookup": {
-            "from": "answer",
-            "localField": "answer",
-            "foreignField": "_id",
-            "as": "answer"
-        }}]
-        question = list(Question.objects.aggregate(pipeline=pipeline))[0]
-        print(question)
-        if question:
-            question['created_at'] = str(question['created_at'])
-            data.append(question)
-        else:
-            question_list.remove(id)
-            change = True
-    if change:
-        question_paper.question_list = question_list
-        question_paper.save()
-    return Response(dumps({'status': 'success', 'data': data}), status=200)
+# @academics.route('question_from_question_paper', methods=['GET'])
+# def question_from_question_paper():
+#     question_paper_id = request.args.get('question_paper')
+#     question_paper = Question_paper.objects(id=question_paper_id).first()
+#     question_list = question_paper.question_list
+#     data = []
+#     change = False
+#     # print(question_list, type(question_list))
+#     for id in list(question_list):
+#         pipeline = [{"$match": {"_id": id}}, {"$lookup": {
+#             "from": "answer",
+#             "localField": "answer",
+#             "foreignField": "_id",
+#             "as": "answer"
+#         }}]
+#         question = list(Question.objects.aggregate(pipeline=pipeline))[0]
+#         print(question)
+#         if question:
+#             question['created_at'] = str(question['created_at'])
+#             data.append(question)
+#         else:
+#             question_list.remove(id)
+#             change = True
+#     if change:
+#         question_paper.question_list = question_list
+#         question_paper.save()
+#     return Response(dumps({'status': 'success', 'data': data}), status=200)

@@ -188,3 +188,54 @@ class Question_paper(Document):
 
     def __str__(self):
         return (str(self.grade)+' '+str(self.subject))
+
+
+class Instruction(Document):
+    id = SequenceField(primary_key=True)
+    note = StringField(max_length=250)
+    meta = {'collection': 'instruction'}
+
+    def validate(self, clean=False):
+        objects = Instruction.objects(note=self.note).first()
+        if objects and objects.note == self.note:
+            return False
+        else:
+            return True
+
+
+class Test(Document):
+    id = SequenceField(primary_key=True)
+    question_paper = ReferenceField(
+        Question_paper, reverse_delete_rule=CASCADE)
+    grade = ReferenceField(Grade, reverse_delete_rule=CASCADE)
+    subject = ReferenceField(Subject, reverse_delete_rule=CASCADE)
+    duration = IntField()
+    mark = IntField()
+    remarks = StringField(max_length=250)
+    description = StringField(max_length=100)
+    test_id = IntField()
+    pass_percentage = IntField()
+    meta = {'collection': 'test'}
+
+
+class Testresult(Document):
+    id = SequenceField(primary_key=True)
+    student_id = ReferenceField(User, reverse_delete_rule=CASCADE)
+    grade = ReferenceField(Grade, reverse_delete_rule=CASCADE)
+    subject = ReferenceField(Subject, reverse_delete_rule=CASCADE)
+    test_id = ReferenceField(Test, reverse_delete_rule=CASCADE)
+    question_paper = ReferenceField(
+        Question_paper, reverse_delete_rule=CASCADE)
+    result = StringField(max_length=20)
+    score = IntField()
+    correct_answer = IntField()
+    worong_answer = IntField()
+    unanswer_question = IntField()
+    meta = {'collection': 'testresult'}
+
+
+class Question_bank(Document):
+    id = SequenceField(primary_key=True)
+    grade = ReferenceField(Grade, reverse_delete_rule=CASCADE)
+    subject = ReferenceField(Subject, reverse_delete_rule=CASCADE)
+    meta = {'collection': 'question_bank'}
