@@ -179,16 +179,34 @@ def chapter_list():
 
 @academics.route('question/', methods=['GET', 'POST'])
 def question():
-    # if request.method ==
-    data = request.json
-    question = Question(**data['question'])
-    answer = Answer(**data['answer'], question=question)
-    try:
-        question.save()
-        answer.save()
-        return Response(dumps({'staus': 'created'}))
-    except Exception as e:
-        return Response(dumps({'staus': 'question is not created', 'data': str(e)}))
+    if request.method == 'GET':
+        grade = request.args.get('grade')
+        subject = request.args.get('subject')
+        from_chapter_no = request.args.get('from_chapter_no')
+        to_chapter_no = request.args.get('to_chapter_no')
+        questions = Question.objects
+        try:
+            if grade and subject:
+                questions = questions(grade=grade, subject=subject)
+                if from_chapter_no and to_chapter_no:
+                    questions = questions(
+                        chapter_no__gte=from_chapter_no, chapter_no__lte=to_chapter_no)
+            return Response(dumps({"status": "success", 'data': questions.to_json()}), status=200)
+        except Exception as e:
+            return Response(dumps({'status': 'failure', 'data': str(e)}))
+    if request.method == 'POST':
+        data = request.json
+        try:
+            data['grade'] = Grade.objects(id=data['grade']).get()
+            data['subject'] = Subject.objects(id=data['subject']).get()
+            data['chapter'] = Chapter.objects(id=data['chapter']).get()
+            question = Question(**data['question'])
+            answer = Answer(**data['answer'], question=question)
+            question.save()
+            answer.save()
+            return Response(dumps({'staus': 'created'}))
+        except Exception as e:
+            return Response(dumps({'status': 'question is not created', 'data': str(e)}))
 
 
 @academics.route('question/<int:id>', methods=['PATCH', 'DELETE'])

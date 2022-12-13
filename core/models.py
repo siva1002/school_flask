@@ -160,6 +160,10 @@ class Question(Document):
     # answer=
     meta = {'collection': 'questions'}
 
+    def validate(self, clean=True):
+        self.chapter_no = self.chapter.chapter_no
+        return super().validate(clean)
+
 
 class Answer(Document):
     id = SequenceField(primary_key=True)
