@@ -10,6 +10,7 @@ from mongoengine import (
     DateField,
     ListField,
     DateTimeField,
+    FileField,
     EmbeddedDocumentField,
     EmbeddedDocument,
     DictField,
@@ -19,6 +20,8 @@ import re
 import datetime
 from flask_login import UserMixin
 import uuid
+
+
 class User(Document, UserMixin):
     id = SequenceField(primary_key=True)
     email = EmailField(required=True)
@@ -43,7 +46,6 @@ class User(Document, UserMixin):
         return super().validate(clean)
 
 
-
 class Profile(Document):
     id = SequenceField(primary_key=True)
     firstname = StringField(max_length=50)
@@ -51,8 +53,9 @@ class Profile(Document):
     fullname = StringField(max_length=50)
     address = StringField(max_length=100)
     standard = ListField()
-    user=ReferenceField(User,reverse_delete_rule=CASCADE)
+    user = ReferenceField(User, reverse_delete_rule=CASCADE)
     meta = {'collection': 'profile'}
+
 
 class Token(Document):
     user_id = ReferenceField(document_type=User, reverse_delete_rule=CASCADE)
@@ -62,9 +65,6 @@ class Token(Document):
     def save(self, *args, **kwargs):
         self.token_id = str(uuid.uuid4())
         super().save(*args, **kwargs)
-
-
-
 
 
 class Grade(Document):
@@ -152,19 +152,18 @@ class Chapter(Document):
         return super().validate(clean)
    
 class Question(Document):
-    id = SequenceField(primary_key=True)
-    grade = ReferenceField(Grade, reverse_delete_rule=CASCADE)
-    subject = ReferenceField(Subject, reverse_delete_rule=CASCADE)
-    chapter = ReferenceField(Chapter,reverse_delete_rule=CASCADE)
-    question = StringField(max_length=150)
-    duration = IntField()
-    mark = IntField()
-    chapter_no = IntField()
-    created_at = DateField(default=datetime.datetime.now())
-    question_type = StringField(max_length=20,choices={'filling_in_blanks','MCQ'},default= None)
-    congitive_level =  StringField(max_length=20,choices={ 'application','knowledge','comprehension'},default=None)
-    difficulty_level = StringField(max_length=20,choies={'medium','hard','easy'},default=None)
-    meta = {'collection':'questions'}
+   grade = ReferenceField(Grade, reverse_delete_rule=CASCADE)
+   subject = ReferenceField(Subject, reverse_delete_rule=CASCADE)
+   chapter = ReferenceField(Chapter,reverse_delete_rule=CASCADE)
+   question = StringField(max_length=150)
+   duration = IntField()
+   mark = IntField()
+   chapter_no = IntField()
+   created_at = DateField(default=datetime.datetime.now())
+   question_type = StringField(max_length=20,choices={'filling_in_blanks','MCQ'},default= None)
+   congitive_level =  StringField(max_length=20,choices={ 'application','knowledge','comprehension'},default=None)
+   difficulty_level = StringField(max_length=20,choies={'medium','hard','easy'},default=None)
+   meta = {'collection':'questions'}  
 class Answer(Document):
     id = SequenceField(primary_key=True)
     question=ReferenceField(Question,reverse_delete_rule=CASCADE,dbref=True)
@@ -174,3 +173,118 @@ class Answer(Document):
     option_d=StringField(max_length=40)
     correctanswer = StringField(choices={"option_d","option_c","option_b","option_a"})
    
+class Instruction(Document):
+    id = SequenceField(primary_key=True)
+    note = StringField(max_length=250)
+    meta = {'collection':'instruction'}
+    def validate(self, clean=False):
+        objects = Instruction.objects(note=self.note).first()
+        if objects and objects.note == self.note:
+            return False
+        else:
+            return True
+
+class Test(Document):
+    # question_paper= ReferenceField(Question_paper,reverse_delete_rule=CASCADE)
+    grade = ReferenceField(Grade,reverse_delete_rule=CASCADE)
+    subject = ReferenceField(Subject,reverse_delete_rule=CASCADE)
+    duration = IntField()
+    mark = IntField()
+    remarks = StringField(max_length=250)
+    description = StringField(max_length=100)
+    test_id = IntField()
+    pass_percentage = IntField()
+    meta = {'collection':'test'}
+class Testresult(Document):
+    student_id = ReferenceField(User,reverse_delete_rule=CASCADE)
+    grade = ReferenceField(Grade,reverse_delete_rule=CASCADE)
+    subject = ReferenceField(Subject,reverse_delete_rule=CASCADE)
+    test_id = ReferenceField(Test,reverse_delete_rule=CASCADE)
+    # question_paper = ReferenceField(Question_paper,reverse_delete_rule=CASCADE)
+    result = StringField(max_length=20)
+    score = IntField()
+    correct_answer = IntField()
+    worong_answer = IntField()
+    unanswer_question = IntField()
+    meta ={'collection':'testresult'}
+class Question_bank(Document):
+    id = SequenceField(primary_key=True)#squencefield is change the id value form objects id 
+    grade = ReferenceField(Grade,reverse_delete_rule=CASCADE)
+    subject = ReferenceField(Subject,reverse_delete_rule=CASCADE)
+    meta = {'collection':'question_bank'}
+
+
+
+
+
+
+
+# class Question_bank(Document):
+#     grade = ReferenceField(Grade,reverse_delete_rule=CASCADE)
+#     subject = ReferenceField(Subject,reverse_delete_rule=CASCADE)
+#     meta = {'collection':'question_bank'}
+
+
+
+
+
+
+
+
+
+
+
+#    def clean(self):
+#        question = Question.objects()
+#        if question:
+#          self.id = question.count()  
+#        else:
+#         self.id = 0
+#    def save(self,*args,**kwargs):
+#         super().save(*args,**kwargs) 
+    id = SequenceField(primary_key=True)
+    grade = ReferenceField(Grade, reverse_delete_rule=CASCADE)
+    subject = ReferenceField(Subject, reverse_delete_rule=CASCADE)
+    chapter = ReferenceField(Chapter, reverse_delete_rule=CASCADE)
+    question = StringField(max_length=150)
+    duration = IntField()
+    mark = IntField()
+    chapter_no = IntField()
+    created_at = DateField(default=datetime.datetime.now())
+    question_type = StringField(max_length=20, choices={
+                                'fill_in_the_blanks', 'MCQ'}, default=None)
+    congitive_level = StringField(max_length=20, choices={
+                                  'application', 'knowledge', 'comprehension'}, default=None)
+    difficulty_level = StringField(
+        max_length=20, choies={'medium', 'hard', 'easy'}, default=None)
+    answer = IntField(min_value=0)
+    # answer=
+    meta = {'collection': 'questions'}
+
+
+class Answer(Document):
+    id = SequenceField(primary_key=True)
+    question = ReferenceField(
+        Question, reverse_delete_rule=CASCADE, dbref=True)
+    option_a = StringField(max_length=40)
+    option_b = StringField(max_length=40)
+    option_c = StringField(max_length=40)
+    option_d = StringField(max_length=40)
+    correctanswer = StringField(
+        choices={"option_d", "option_c", "option_b", "option_a"})
+
+
+class Question_paper(Document):
+    id = SequenceField()
+    grade = ReferenceField(Grade, reverse_delete_rule=CASCADE)
+    subject = ReferenceField(Subject, reverse_delete_rule=CASCADE)
+    file = FileField(upload_to='question_files/')
+    created_by = StringField(max_length=20)
+    created_at = DateTimeField(default=datetime.datetime.now())
+    test_id = StringField(max_length=25)
+    question_list = ListField()
+    timing = IntField(min_value=0)
+    overall_marks = IntField(min_value=0)
+
+    def __str__(self):
+        return (str(self.grade)+' '+str(self.subject))

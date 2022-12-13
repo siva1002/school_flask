@@ -1,7 +1,7 @@
 from .models import User
 from flask import Flask, render_template, request
 from flask_admin import Admin
-from .extension import mongo
+# from .extension import mongo
 from .accounts import accounts
 from .academics import academics
 from flask_cors import CORS

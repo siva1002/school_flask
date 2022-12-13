@@ -1,12 +1,15 @@
 from flask import Blueprint, request, Response, jsonify
 from json import dumps, loads
 from .models import *
-from .utils import token_required
+from .utils import token_required, render_to_pdf2
 from .models import Chapter
-
+from flask import session
+import random
 academics = Blueprint('academics', __name__)
 
 # grade
+
+
 @academics.route('grade/', methods=['POST'])
 def grade():
     data = request.json
@@ -18,40 +21,45 @@ def grade():
         return 'Not a valid grade'
     except Exception as e:
         return Response(dumps({'message': e}), status=400)
+
+
 @academics.route('grade/<int:id>', methods=['PATCH', 'DELETE'])
 def gradeUD(id):
-    query=Grade.objects(id=id).get()
+    query = Grade.objects(id=id).get()
     if request.method == 'PATCH':
         print(query.to_json())
         if query:
-            data=request.json
+            data = request.json
             try:
                 query.update(**data)
-                return Response(dumps({"message":f"Grade {query.grade} Updated "}), status=200)
+                return Response(dumps({"message": f"Grade {query.grade} Updated "}), status=200)
             except Exception as e:
-                return Response(dumps({'message':str(e)}), status=400)
+                return Response(dumps({'message': str(e)}), status=400)
     if request.method == 'DELETE':
-          if query:
+        if query:
             try:
                 query.delete()
             except Exception as e:
-                return Response(dumps({'message':str(e)}), status=400)
+                return Response(dumps({'message': str(e)}), status=400)
+
+
 '''Subject Creation'''
+
+
 @academics.route('subject/', methods=['POST'])
-def subject():
+def subject(id=None):
     print('POST')
     data = request.json
     query = Subject(**data)
-    grade= Grade.objects(id=query['grade_id'])
-    if grade:
-        # try:
-            query.save()
-            return Response(dumps({'message': f"{data['name']} Created"}), status=200)
-        # except Exception as e:
-            return Response(dumps({'message': str(e)}), status=404)
-    else:
-        return Response(dumps({'message': "grade doesn\'t exist"}), status=404)
+    try:
+        query.save()
+        return Response(dumps({'message': f"{data['name']} Created"}), status=200)
+    except Exception as e:
+        return Response(dumps({'message': str(e)}), status=404)
+
 '''Subject Update and Delete'''
+
+
 @academics.route('subject/<int:id>', methods=['PATCH', 'DELETE'])
 def subjectUD(id=None):
     if request.method == 'PATCH':
@@ -74,7 +82,11 @@ def subjectUD(id=None):
         subject = Subject.objects(id=id).first()
         subject.delete()
         return Response(dumps({'status': 'success', "data": f"chapter {subject.name} deleted successfully"}))
+
+
 '''Chapter creation and retrieval'''
+
+
 @academics.route('chapter/', methods=['GET', 'POST'])
 # @token_required
 def chapter():
@@ -85,7 +97,7 @@ def chapter():
             subject = Subject.objects(id=data['subject_id']).first()
             if not subject:
                 return Response(dumps({'status': 'failure', 'data': "subject doesn't exists"}))
-            chapter = Chapter(**data,subject_id=subject)
+            chapter = Chapter(**data, subject_id=subject)
             chapter.save()
         except Exception as e:
             return Response(dumps({'message': str(e)}))
@@ -95,8 +107,11 @@ def chapter():
         print(chapters)
         return Response(dumps({'status': 'success', 'data': chapters.to_json()}), status=200)
 
+
 '''Chapter Edit and Delete '''
-@ academics.route('chapter/<id>/', methods=['PATCH', "DELETE"])
+
+
+@ academics.route('chapter/<id>/', methods=['GET', 'PATCH', "DELETE"])
 def chapter_edit(id):
     chapter = Chapter.objects(id=id).first()
     if not chapter:
@@ -117,8 +132,12 @@ def chapter_edit(id):
     if request.method == "DELETE":
         chapter.delete()
         return Response(dumps({'status': 'success', 'data': 'chapter {} deleted successfully'.format(chapter.name)}))
+    return Response(dumps({'status': 'success', 'data': chapter.to_json()}))
+
 
 '''Chapter retrieval'''
+
+
 @ academics.route('chapter-list', methods=['POST'])
 def chapter_list():
     data = request.json
@@ -138,18 +157,154 @@ def chapter_list():
         chapter['subject'] = subject.name
         chapter['subject_id'] = subject.id
     return Response(dumps({'status': 'success', 'data': chapters}))
+
+
 '''Question Creation'''
-@academics.route('question/',methods=['POST'])
+
+
+@academics.route('question/', methods=['POST'])
 def question():
+    data = request.json
+    query = Question(grade=data['grade'],subject=data['subject'],chapter=data['subject'],
+    question=data['question'],duration=data['duration'],mark = data['mark'],chapter_no=data['chapter_no'],question_type=data['question_type'],congitive_level=data['congitive_level'],difficulty_level=data['difficulty_level'])
+    # try:
+    query.save()
+    return Response(dumps({'staus':'created'}))
+
+
+'''question paper''' 
+
+
+@academics.route('questionpaper/',methods=['POST'])
+def question_paper():
+    data = request.json
+    query = Question_bank(grade=data['grade'],subject=data['subject'],created_by=data['created_by'],
+    created_at = data['created_at'],test_id=data['test_id'],duration=data['duration'],
+    overall_mark=data['overall_mark'],no_of_question=data['no_of_question'])  
+    query.save() 
+    return Response(dumps({'message':'created'}),status=200) 
+
+
+
+'''test creation'''    
+
+
+
+@academics.route('test/',methods=['POST'])
+def test():
+    data = request.json
+    test_query = Test(question_paper=data['question_paper'],grade = data['grade'],
+    subject=data['subject'],duration=data['subject'], 
+    mark = data['mark'],remarks=data['remarks'],description=data['description'],
+    test_id=data['test_id'],pass_percentage=data['pass_percentage'])
+    test_query.save()
+@academics.route('testupdate/<id>',methods=['PATCH'])
+def test_update(id):
+    test = Testresult.objects(id=id).first()
+    if request.method=='PATCH':
+        data = request.json
+        try:
+            for key in data:
+                setattr(test,key,data[key])
+                test.save()
+        except Exception as e:
+            return Response(dumps({'message':'incorrect','data':str(e)}),status=404)
+        return Response(dumps({'message':'success', 'data':test.to_json()})) 
+    if request.mehtod=='DELETE':
+        test.delete()
+        return Response(dumps({'message':'deleted'}),status=202)  
+    
+
+
+'''testresult'''
+
+
+
+@academics.route('testresult/',methods=['POST'])
+def testresult():
+    data = request.json
+    resultquery = Testresult(student_id=data['student_id'],grade=data['grade'],subject=data['subject'],test_id=data['test_id'],
+    question_paper=data['question_paper'],result=data['result'],score=data['score'],correct_answer=data['correct_answer'],
+    wrong_answer=data['wrong_answer'],unanswer_question=data['unanswer_question']) 
+    resultquery.save() 
+
+
+'''test restult update'''  
+
+
+
+@academics.route('testresult<pk>/',methods=['PATCH'])
+def resultupdate(id):
+    testresult = Testresult.objects(id=id).first()
+    if not testresult:
+        return Response(dumps({'message':'not match'}))
+    if request.method=="PATCH":
+        data = request.json
+        try:
+            for x in data:
+                setattr(testresult,x,data[x])
+                testresult.save()
+                return Response(dumps({'message':'updated'}),status=200)
+        except Exception as e:
+            return Response(dumps({"status":'incorrect_id','data':str(e)}),status=404)    
+    if request.method=='DELETE':
+        testresult.delete()
+        return Response(dumps({"status":"id_deleted"}),status=200)
+
+
+''' question bank creation'''  
+
+
+@academics.route('questionbank/',methods=['POST'])
+def questionbank():
     data = request.json
     question=Question(**data['question'])
     answer=Answer(**data['answer'],question=question)
     try:
         question.save()
         answer.save()
-        return Response(dumps({'staus':'created'}))
+        return Response(dumps({'staus': 'created'}))
     except Exception as e:
-        return Response(dumps({'staus':'question is not created','data':str(e)}))    
+        return Response(dumps({'staus':'question is not created','data':str(e)}))  
+
+
+'''Instruction creation '''    
+
+
+@academics.route('instruction/',methods=['POST'])
+def instructions():
+    data = request.json
+    try:
+      instructions_query = Instruction(note=data['note'])
+      if instructions_query.validate():
+          instructions_query.save()
+          return Response(dumps({'message':'created'}),status=200)
+      return Response(dumps({"message":"sdfsf"}))     
+    except Exception as e:
+        return Response(dumps({'message':str(e)}),status=404)  
+
+
+''' instruction update and delete'''     
+
+
+@academics.route('update/<int:id>',methods=['PATCH','DELETE'])     
+def instructionupdate(id):
+    update = Instruction.objects(id=id).first()  
+    if request.method=='PATCH':
+        data = request.json
+        try:
+            for y in data:
+                setattr(update,y,data[y])
+                update.save()
+                return Response(dumps({'message':'updated'}),status=200)
+        except Exception as e:
+            return Response(dumps({'message':'instruction incorrect'}),status=404)
+    if request.method=='DELETE':
+        update.delete()
+        return Response(dumps({"message":'deleted'}),status=200) 
+
+''' question update'''   
+
 @academics.route('question/<int:id>', methods=['PATCH', 'DELETE'])
 def questionUD(id):
     try:
@@ -175,7 +330,7 @@ def questionUD(id):
                 return Response(dumps({"message":str(e)}),status=400)
     return Response(dumps({"message":"Question doesn't exists"}),status=400)
 
-@academics.route('load_subject_chapter',methods=['GET'])
+@academics.route('load_subject_chapter/',methods=['GET'])
 def load_subject_chapter():
     grade_id=request.args.get('grade_id', None)
     subject_id=request.args.get('subject_id', None)
@@ -198,6 +353,22 @@ def load_grade():
         return Response(dumps({"data":grades.to_json()}),status=200)
     else:
         return None
+@academics.route('load_test',methods=['GET'])  
+def load_test():
+    grade_id=request.args.get('grade_id', None)
+    subject_id=request.args.get('subject_id', None)
+    if subject.id:
+        subject = Subject.objects(subject = int(subject_id))
+        return Response(dumps({'message':subject}),status=200)
+        
+
+
+
+
+
+
+
+
 # @academics.route('load_test',methods=['GET'])
 # def load_test(request):
 #     # grade_id = request.GET.get('grade', None)
@@ -206,6 +377,7 @@ def load_grade():
 #         test = Test.objects.filter(subject_id= subject_id)
 #     return render(request, 'academics/test_dropdown.html', {'items':test})
 # @academics.route('load_chapter',methods=['GET'])
-def load_chapter_no(request):
-    subject_id = request.GET.get('subject', None)
-    chapter = Chapter.objects.filter(subject=subject_id)
+# def load_chapter_no(request):
+#     subject_id = request.GET.get('subject', None)
+#     chapter = Chapter.objects.filter(subject=subject_id)
+#     return render(request, 'academics/dropdown_chapter_no.html', {'items': chapter})
