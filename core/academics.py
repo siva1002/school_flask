@@ -1,7 +1,7 @@
 from flask import Blueprint, request, Response, jsonify, session, render_template
 from json import dumps, loads
 from .models import *
-from .utils import token_required, render_to_pdf2
+from .utils import token_required, render_to_pdf2, get_object
 from .models import Chapter
 import random
 from bson import json_util
@@ -98,8 +98,9 @@ def chapter():
         data = request.json
         print(data)
         try:
-            subject = Subject.objects(id=data['subject_id']).get()
-            chapter = Chapter(**data, subject_id=subject)
+            subject = get_object(Subject, data['subject'])
+            print(subject)
+            chapter = Chapter(**data, subject=subject)
             chapter.save()
         except Exception as e:
             return Response(dumps({'message': str(e)}))
@@ -165,17 +166,6 @@ def chapter_list():
 
 '''Question Creation'''
 
-# grade = self.request.query_params.get('grade')
-# subject = self.request.query_params.get('subject')
-# from_chapter_no = self.request.query_params.get('from_chapter_no')
-# to_chapter_no = self.request.query_params.get('to_chapter_no')
-# questions = Question.objects.all()
-# if grade and subject:
-#     try:
-#         if from_chapter_no and to_chapter_no:
-#             questions = Question.objects.filter(grade_id=int(grade), subject_id=int(
-#                 subject), chapter_no__gte=from_chapter_no, chapter_no__lte=to_chapter_no)
-
 
 @academics.route('question/', methods=['GET', 'POST'])
 def question():
@@ -208,6 +198,8 @@ def question():
         except Exception as e:
             return Response(dumps({'status': 'question is not created', 'data': str(e)}))
 
+# question edit
+
 
 @academics.route('question/<int:id>', methods=['PATCH', 'DELETE'])
 def questionUD(id):
@@ -234,6 +226,8 @@ def questionUD(id):
                 return Response(dumps({"message": str(e)}), status=400)
     return Response(dumps({"message": "Question doesn't exists"}), status=400)
 
+# load chapter,subject
+
 
 @academics.route('load_subject_chapter', methods=['GET'])
 def load_subject_chapter():
@@ -248,6 +242,8 @@ def load_subject_chapter():
     chapter = list(Chapter.objects(subject_id=int(subject_id)))
     return render_template('dropdown_list_options.html', items=chapter)
 
+# load grade
+
 
 @academics.route('load_grade', methods=['GET'])
 def load_grade():
@@ -261,6 +257,8 @@ def load_grade():
         return None
     return render_template('dropdown_grade.html', items=list(grades))
 
+# load test
+
 
 @academics.route('load_test', methods=['GET'])
 def load_test(request):
@@ -269,12 +267,16 @@ def load_test(request):
         test = Test.objects(subject=subject_id)
     return render_template('test_dropdown.html', items=list(test))
 
+# load chapter no
+
 
 @academics.route('load_chapter', methods=['GET'])
 def load_chapter_no(request):
     subject_id = request.GET.get('subject', None)
     chapter = Chapter.objects(subject_id=subject_id)
     return render_template('dropdown_chapter_no.html', items=list(chapter))
+
+# question paper create
 
 
 @ academics.route('question-list', methods=['GET', 'POST'])
@@ -397,6 +399,8 @@ def question_list():
         except Exception as e:
             return Response(dumps({"status": "failure", "data": str(e)}), status=206)
 
+# question paper edit
+
 
 @ academics.route('question-paper/<id>/', methods=['GET', 'PATCH', "DELETE"])
 def question_paper_edit(id):
@@ -420,6 +424,8 @@ def question_paper_edit(id):
         question_paper.delete()
         return Response(dumps({'status': 'success', 'data': 'question paper deleted successfully'}))
     return Response(dumps({'status': 'success', 'data': question_paper.to_json()}))
+
+# retrive questions from question paper
 
 
 @ academics.route('test-questions', methods=['GET'])
@@ -449,6 +455,8 @@ def question_from_question_paper():
         question_paper.question_list = question_list
         question_paper.save()
     return Response(dumps({'status': 'success', 'data': data}), status=200)
+
+# test create
 
 
 @ academics.route('test/', methods=['GET', 'POST'])
@@ -487,6 +495,8 @@ def test():
             return Response(dumps({"status": "failure", "data": str(e)}), status=206)
         return Response(dumps({"status": "success", 'data': test_query.to_json()}), status=201)
 
+# test edit
+
 
 @ academics.route('test/<id>', methods=['GET', 'PATCH', 'DELETE'])
 def test_edit(id):
@@ -514,6 +524,8 @@ def test_edit(id):
             question_paper.save()
         test.delete()
         return Response(dumps({'message': 'deleted'}), status=202)
+
+# test result
 
 
 @ academics.route('testresult/', methods=['GET', 'POST'])
@@ -558,6 +570,8 @@ def test_result():
         except Exception as e:
             return Response(dumps({"status": "failure", "data": str(e)}), status=206)
         return Response(dumps({"status": "success", 'data': resultquery.to_json()}), status=201)
+
+# test result edit
 
 
 @ academics.route('testresult/<id>', methods=['PATCH'])

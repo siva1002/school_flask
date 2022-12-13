@@ -77,6 +77,10 @@ def render_to_pdf2(template_src, folder_name, question_paper, params: dict):
     return question_paper, True
 
 
+def get_object(model, value):
+    obj = model.objects(id=value).get()
+    return obj
+
 # def index():
 #     name = "SIR JOHN WILLIAMSON LATHAM"
 #     html = render_template(
