@@ -2,7 +2,6 @@ from .models import Token, User
 from flask import render_template, make_response, session, request
 from functools import wraps
 import os
-import pdfkit
 from io import BytesIO
 from xhtml2pdf import pisa
 import uuid

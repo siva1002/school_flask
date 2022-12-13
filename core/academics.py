@@ -71,17 +71,17 @@ def subjectUD(id=None):
         query = Subject.objects(id=int(id)).first()
         print(query.to_json())
         if query:
-            try:
-                code = Subject.objects(code=str(data['code'])).first()
-                print(id)
-                if code is None or code.id == id:
-                    query.update(**data)
-                    return Response(dumps({'message': f" From Standard {str(query.grade.grade)},Subject {query.name} updated to {data['name']} "}), status=400)
-                else:
-                    return Response(dumps({'message': f' {code.name} Subject code already exists'}), status=404)
-            except Exception as e:
-                print(e)
-                return Response(dumps({'message': str(e)}), status=400)
+            # try:
+            code = Subject.objects(code=str(data['code'])).first()
+            print(id)
+            if code is None or code.id == id:
+                query.update(**data)
+                return Response(dumps({'message': f" From Standard {str(query.grade_id.grade)},Subject {query.name} updated to {data['name']} "}), status=400)
+            else:
+                return Response(dumps({'message': f' {code.name} Subject code already exists'}), status=404)
+            # except Exception as e:
+            #     print(e)
+            #     return Response(dumps({'message': str(e)}), status=400)
     if request.method == 'DELETE':
         subject = Subject.objects(id=id).first()
         subject.delete()
@@ -175,6 +175,7 @@ def question():
         from_chapter_no = request.args.get('from_chapter_no')
         to_chapter_no = request.args.get('to_chapter_no')
         questions = Question.objects
+        q = Question.objects(question="what is science").first()
         try:
             if grade and subject:
                 questions = questions(grade=grade, subject=subject)
@@ -186,17 +187,20 @@ def question():
             return Response(dumps({'status': 'failure', 'data': str(e)}))
     if request.method == 'POST':
         data = request.json
-        try:
-            data['grade'] = Grade.objects(id=data['grade']).get()
-            data['subject'] = Subject.objects(id=data['subject']).get()
-            data['chapter'] = Chapter.objects(id=data['chapter']).get()
-            question = Question(**data['question'])
-            answer = Answer(**data['answer'], question=question)
-            question.save()
-            answer.save()
-            return Response(dumps({'staus': 'created'}))
-        except Exception as e:
-            return Response(dumps({'status': 'question is not created', 'data': str(e)}))
+        # try:
+        data['question']['grade'] = Grade.objects(
+            id=data['question']['grade']).get()
+        data['question']['subject'] = Subject.objects(
+            id=data['question']['subject']).get()
+        data['question']['chapter'] = Chapter.objects(
+            id=data['question']['chapter']).get()
+        question = Question(**data['question'])
+        answer = Answer(**data['answer'], question=question)
+        question.save()
+        answer.save()
+        return Response(dumps({'staus': 'created'}))
+        # except Exception as e:
+        return Response(dumps({'status': 'question is not created', 'data': str(e)}))
 
 # question edit
 

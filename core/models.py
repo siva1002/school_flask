@@ -16,6 +16,7 @@ from mongoengine import (
     DictField,
     CASCADE,
 )
+import re
 import datetime
 from flask_login import UserMixin
 import uuid
@@ -89,28 +90,41 @@ class Subject(Document):
     meta = {'collection': 'subject'}
 
     def validate(self, clean=True):
+        print('validate')
         objects = Subject.objects
+        sname = str(self.name).upper()
         if objects:
             code = Subject.objects(
                 code=(str(self.name[:3]).upper()+str(self.code)).upper())
-            subject = Subject.objects(grade=self.grade, name=self.name)
+            subject = Subject.objects(
+                grade_id=self.grade_id, name=sname).first()
             print(self.code, 'new')
             if subject:
                 print(subject.to_json())
                 raise ValidationError(
                     message='Subject already exists for this grade')
             if code:
-                print(code.to_json())
                 raise ValidationError(
                     message='Code already exists give another one')
         else:
             return True
 
+    def update(self, **kwargs):
+        code = re.findall('\d+', kwargs['code'])
+        name = str(kwargs['name']).upper()
+        subcode = name[:3]+code[0]
+        subjectcode = Subject.objects(code=subcode, id__ne=self.id).first()
+        if subjectcode:
+            raise ValidationError({'message': 'Subjectcode already exists'})
+        kwargs['name'] = name
+        kwargs['code'] = subcode
+        return super().update(**kwargs)
+
     def save(self, *args, **kwargs):
         subjects = Subject.objects
         if subjects:
-            self.code = (self.name[:3]+str(self.code)).upper()
             self.name = str(self.name).upper()
+            self.code = (self.name[:3]+str(self.code)).upper()
         else:
             self.name = str(self.name).upper()
             self.code = (self.name[:3]+str(self.code)).upper()
@@ -142,9 +156,9 @@ class Chapter(Document):
 
 class Question(Document):
     id = SequenceField(primary_key=True)
-    grade = ReferenceField(Grade, reverse_delete_rule=CASCADE)
-    subject = ReferenceField(Subject, reverse_delete_rule=CASCADE)
-    chapter = ReferenceField(Chapter, reverse_delete_rule=CASCADE)
+    grade = ReferenceField(Grade, reverse_delete_rule=CASCADE, dbref=True)
+    subject = ReferenceField(Subject, reverse_delete_rule=CASCADE, dbref=True)
+    chapter = ReferenceField(Chapter, reverse_delete_rule=CASCADE, dbref=True)
     question = StringField(max_length=150)
     duration = IntField()
     mark = IntField()
