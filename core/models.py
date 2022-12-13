@@ -132,7 +132,7 @@ class Chapter(Document):
     id = SequenceField(primary_key=True)
     name = StringField(max_length=30)
     chapter_no = IntField(min_value=0)
-    subject_id = ReferenceField(
+    subject = ReferenceField(
         Subject, reverse_delete_rule=CASCADE, dbref=True)
     description = StringField(max_length=50)
     created_at = DateTimeField(default=datetime.datetime.now())
@@ -152,9 +152,9 @@ class Chapter(Document):
    
 class Question(Document):
     id = SequenceField(primary_key=True)
-    grade = ReferenceField(Grade, reverse_delete_rule=CASCADE)
-    subject = ReferenceField(Subject, reverse_delete_rule=CASCADE)
-    chapter = ReferenceField(Chapter, reverse_delete_rule=CASCADE)
+    grade = ReferenceField(Grade, reverse_delete_rule=CASCADE,dbref=True)
+    subject = ReferenceField(Subject, reverse_delete_rule=CASCADE,dbref=True)
+    chapter = ReferenceField(Chapter, reverse_delete_rule=CASCADE, dbref=True)
     question = StringField(max_length=150)
     duration = IntField()
     mark = IntField()
@@ -169,6 +169,10 @@ class Question(Document):
     answer = IntField(min_value=0)
     # answer=
     meta = {'collection': 'questions'}
+
+    def validate(self, clean=True):
+        self.chapter_no = self.chapter.chapter_no
+        return super().validate(clean)
 
 
 class Answer(Document):

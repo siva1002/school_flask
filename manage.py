@@ -5,7 +5,7 @@ from core import create_app
 
 app = create_app()
 manager = Manager(app=app)
-manager.add_command("run", Server(host="127.0.0.0", port=8000))
+manager.add_command("run", Server(host="127.0.0.0", port=7000))
 
 # @manager.command
 # def migrate():

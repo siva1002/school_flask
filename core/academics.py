@@ -7,6 +7,9 @@ import random
 from bson import json_util
 academics = Blueprint('academics', __name__)
 
+models = {
+    'grade': Grade, 'subject': Subject, 'chapter': Chapter, 'question_paper': Question_paper, 'test': Test, 'test_result': Testresult}
+
 # grade
 @academics.route('grade/', methods=['POST'])
 def grade():
@@ -108,9 +111,9 @@ def chapter_edit(id):
         print(data)
         try:
             for key in data:
-                if key == 'subject_id':
-                    data['subject_id'] = Subject.objects(
-                        id=data['subject_id']).get()
+                if key == 'subject':
+                    data['subject'] = Subject.objects(
+                        id=data['subject']).get()
                 print(key)
                 setattr(chapter, key, data[key])
             chapter.save()
@@ -147,17 +150,37 @@ def chapter_list():
 
 
 '''Question Creation'''
-@academics.route('question/', methods=['POST'])
+@academics.route('question/', methods=['GET','POST'])
 def question():
-    data = request.json
-    question = Question(**data['question'])
-    answer = Answer(**data['answer'], question=question)
-    try:
+    if request.method == 'GET':
+        grade = request.args.get('grade')
+        subject = request.args.get('subject')
+        from_chapter_no = request.args.get('from_chapter_no')
+        to_chapter_no = request.args.get('to_chapter_no')
+        questions = Question.objects
+        q=Question.objects(question="what is science").first()
+        try:
+            if grade and subject:
+                questions = questions(grade=grade, subject=subject)
+                if from_chapter_no and to_chapter_no:
+                    questions = questions(
+                        chapter_no__gte=from_chapter_no, chapter_no__lte=to_chapter_no)
+            return Response(dumps({"status": "success", 'data': questions.to_json()}), status=200)
+        except Exception as e:
+            return Response(dumps({'status': 'failure', 'data': str(e)}))
+    if request.method == 'POST':
+        data = request.json
+        # try:
+        data['question']['grade'] = Grade.objects(id=data['question']['grade']).get()
+        data['question']['subject'] = Subject.objects(id=data['question']['subject']).get()
+        data['question']['chapter'] = Chapter.objects(id=data['question']['chapter']).get()
+        question = Question(**data['question'])
+        answer = Answer(**data['answer'], question=question)
         question.save()
         answer.save()
         return Response(dumps({'staus': 'created'}))
-    except Exception as e:
-        return Response(dumps({'staus': 'question is not created', 'data': str(e)}))
+        # except Exception as e:
+        return Response(dumps({'status': 'question is not created', 'data': str(e)}))
 
 
 @academics.route('question/<int:id>', methods=['PATCH', 'DELETE'])
@@ -441,17 +464,21 @@ def test():
 
 @ academics.route('test/<id>', methods=['GET', 'PATCH', 'DELETE'])
 def test_edit(id):
-    test = Testresult.objects(id=id).first()
+    test = Test.objects(id=id).first()
     if not test:
         return Response(dumps({'status': 'failure', 'data': "test doesn't exists"}))
     if request.method == 'PATCH':
         data = request.json
-        try:
-            for key in data:
-                setattr(test, key, data[key])
-                test.save()
-        except Exception as e:
-            return Response(dumps({'message': 'incorrect', 'data': str(e)}), status=206)
+        # try:
+        for key in data:
+            if key == 'question_paper' or key == 'grade' or key == 'subject':
+                print(key, models[key])
+                data[key] = models[key].objects(id=data[key]).get()
+            print(data[key])
+            setattr(test, key, data[key])
+        test.save()
+        # except Exception as e:
+        #     return Response(dumps({'message': 'incorrect', 'data': str(e)}), status=206)
         return Response(dumps({'message': 'success', 'data': test.to_json()}), status=200)
     if request.mehtod == 'DELETE':
         test_uid = test.test_uid
