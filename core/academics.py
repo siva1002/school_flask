@@ -42,12 +42,15 @@ def subject():
     print('POST')
     data = request.json
     query = Subject(**data)
-    try:
-        query.save()
-        return Response(dumps({'message': f"{data['name']} Created"}), status=200)
-    except Exception as e:
-        return Response(dumps({'message': str(e)}), status=404)
-
+    grade= Grade.objects(id=query['grade_id'])
+    if grade:
+        # try:
+            query.save()
+            return Response(dumps({'message': f"{data['name']} Created"}), status=200)
+        # except Exception as e:
+            return Response(dumps({'message': str(e)}), status=404)
+    else:
+        return Response(dumps({'message': "grade doesn\'t exist"}), status=404)
 '''Subject Update and Delete'''
 @academics.route('subject/<int:id>', methods=['PATCH', 'DELETE'])
 def subjectUD(id=None):
@@ -56,17 +59,17 @@ def subjectUD(id=None):
         query = Subject.objects(id=int(id)).first()
         print(query.to_json())
         if query:
-            try:
+            # try:
                 code = Subject.objects(code=str(data['code'])).first()
                 print(id)
                 if code is None or code.id == id:
                     query.update(**data)
-                    return Response(dumps({'message': f" From Standard {str(query.grade.grade)},Subject {query.name} updated to {data['name']} "}), status=400)
+                    return Response(dumps({'message': f" From Standard {str(query.grade_id.grade)},Subject {query.name} updated to {data['name']} "}), status=400)
                 else:
                     return Response(dumps({'message': f' {code.name} Subject code already exists'}), status=404)
-            except Exception as e:
-                print(e)
-                return Response(dumps({'message': str(e)}), status=400)
+            # except Exception as e:
+            #     print(e)
+            #     return Response(dumps({'message': str(e)}), status=400)
     if request.method == 'DELETE':
         subject = Subject.objects(id=id).first()
         subject.delete()
