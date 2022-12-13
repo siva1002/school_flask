@@ -121,7 +121,7 @@ class Chapter(Document):
     id = SequenceField(primary_key=True)
     name = StringField(max_length=30)
     chapter_no = IntField(min_value=0)
-    subject_id = ReferenceField(
+    subject = ReferenceField(
         Subject, reverse_delete_rule=CASCADE, dbref=True)
     description = StringField(max_length=50)
     created_at = DateTimeField(default=datetime.datetime.now())

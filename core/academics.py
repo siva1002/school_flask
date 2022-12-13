@@ -7,6 +7,9 @@ import random
 from bson import json_util
 academics = Blueprint('academics', __name__)
 
+models = {
+    'grade': Grade, 'subject': Subject, 'chapter': Chapter, 'question_paper': Question_paper, 'test': Test, 'test_result': Testresult}
+
 # grade
 
 
@@ -120,9 +123,9 @@ def chapter_edit(id):
         print(data)
         try:
             for key in data:
-                if key == 'subject_id':
-                    data['subject_id'] = Subject.objects(
-                        id=data['subject_id']).get()
+                if key == 'subject':
+                    data['subject'] = Subject.objects(
+                        id=data['subject']).get()
                 print(key)
                 setattr(chapter, key, data[key])
             chapter.save()
@@ -162,9 +165,21 @@ def chapter_list():
 
 '''Question Creation'''
 
+# grade = self.request.query_params.get('grade')
+# subject = self.request.query_params.get('subject')
+# from_chapter_no = self.request.query_params.get('from_chapter_no')
+# to_chapter_no = self.request.query_params.get('to_chapter_no')
+# questions = Question.objects.all()
+# if grade and subject:
+#     try:
+#         if from_chapter_no and to_chapter_no:
+#             questions = Question.objects.filter(grade_id=int(grade), subject_id=int(
+#                 subject), chapter_no__gte=from_chapter_no, chapter_no__lte=to_chapter_no)
 
-@academics.route('question/', methods=['POST'])
+
+@academics.route('question/', methods=['GET', 'POST'])
 def question():
+    # if request.method ==
     data = request.json
     question = Question(**data['question'])
     answer = Answer(**data['answer'], question=question)
@@ -457,17 +472,21 @@ def test():
 
 @ academics.route('test/<id>', methods=['GET', 'PATCH', 'DELETE'])
 def test_edit(id):
-    test = Testresult.objects(id=id).first()
+    test = Test.objects(id=id).first()
     if not test:
         return Response(dumps({'status': 'failure', 'data': "test doesn't exists"}))
     if request.method == 'PATCH':
         data = request.json
-        try:
-            for key in data:
-                setattr(test, key, data[key])
-                test.save()
-        except Exception as e:
-            return Response(dumps({'message': 'incorrect', 'data': str(e)}), status=206)
+        # try:
+        for key in data:
+            if key == 'question_paper' or key == 'grade' or key == 'subject':
+                print(key, models[key])
+                data[key] = models[key].objects(id=data[key]).get()
+            print(data[key])
+            setattr(test, key, data[key])
+        test.save()
+        # except Exception as e:
+        #     return Response(dumps({'message': 'incorrect', 'data': str(e)}), status=206)
         return Response(dumps({'message': 'success', 'data': test.to_json()}), status=200)
     if request.mehtod == 'DELETE':
         test_uid = test.test_uid
