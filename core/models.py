@@ -103,7 +103,6 @@ class Subject(Document):
                 print(code.to_json())
                 raise ValidationError(
                     message='Code already exists give another one')
-
         else:
             return True
 

@@ -6,6 +6,7 @@ import pdfkit
 from io import BytesIO
 from xhtml2pdf import pisa
 import uuid
+from pathlib import Path
 
 
 def token_required(f):
@@ -36,7 +37,11 @@ def render_to_pdf2(template_src, folder_name, question_paper, params: dict):
     list = file_path.split('/')
     list.pop()
     file_path = '/'.join(list)
-
+    # if not os.path.exists((str(file_path)+f'/media/{folder_name}/')):
+    #     if not os.path.exists((str(file_path)+f'/media')):
+    #         os.makedirs('media', mode=0o777)
+    #     Path.mkdir(folder_name, parents=(
+    #         str(file_path)+f'/media/'))
     html = render_template(
         template_src,
         data=params
