@@ -61,8 +61,8 @@ def subject():
             grades = Grade.objects(grade=grade).first()
             queryset = queryset(grade_id=grades.id)
             data=queryset.to_json()
-           
-            if len(queryset) < 0:
+            print(data)
+            if len(queryset) > 0:
                 return Response(dumps({'status': 'success',"data":data}), status=200)
             return Response(dumps({"status":f"No Subject for this grade {grade}"}), status=206)
            
