@@ -79,14 +79,3 @@ def render_to_pdf2(template_src, folder_name, question_paper, params: dict):
 def get_object(model, value):
     obj = model.objects(id=value).get()
     return obj
-
-# def index():
-#     name = "SIR JOHN WILLIAMSON LATHAM"
-#     html = render_template(
-#         "certificate.html",
-#         name=name)
-#     pdf = pdfkit.from_string(html, False)
-#     response = make_response(pdf)
-#     response.headers["Content-Type"] = "application/pdf"
-#     response.headers["Content-Disposition"] = "inline; filename=output.pdf"
-#     return response

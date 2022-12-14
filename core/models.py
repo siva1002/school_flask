@@ -85,7 +85,7 @@ class Subject(Document):
     id = SequenceField(primary_key=True)
     name = StringField(max_length=20)
     code = StringField(max_length=20)
-    grade = ReferenceField(Grade, reverse_delete_rule=CASCADE, dbref=True)
+    grade_id = ReferenceField(Grade, reverse_delete_rule=CASCADE, dbref=True)
     created_at = DateField(default=datetime.datetime.now())
     meta = {'collection': 'subject'}
 

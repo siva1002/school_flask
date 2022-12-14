@@ -5,6 +5,18 @@ from .utils import token_required, render_to_pdf2, get_object
 from .models import Chapter
 import random
 from bson import json_util
+from mongoengine import connect, get_db
+from flask_paginate import get_parameter, get_page_parameter, Pagination
+from flask_rest_paginate import Pagination
+# from . import pagination
+from .accounts import db
+
+# connect(
+#     host='mongodb+srv://root:12345@cluster0.kv3gwol.mongodb.net/school'
+# )
+# db = get_db()
+
+# pagination = Pagination(db=db)
 academics = Blueprint('academics', __name__)
 
 models = {
@@ -12,18 +24,58 @@ models = {
 
 # grade
 
+# if user.is_anonymous:
+#     queryset = Grade.objects.all()
+# elif user.user_type == 'is_staff':
+#     grade = user.profile.standard
+#     grade_list = []
+#     for i in grade:
+#         grade_list.append(int(i[0]))
+#     print(grade, grade_list)
+#     queryset = queryset.filter(grade__in=grade_list)
+# elif user.user_type == 'is_student':
+#     return Response({"status": "failure", 'data': 'Your not have access to view this page'})
+# serializer = GradeSerializer(queryset, many=True)
+# return Response({"status": "success", 'data': serializer.data})
 
-@academics.route('grade/', methods=['POST'])
+
+@academics.route('grade/', methods=['GET', 'POST'])
 def grade():
-    data = request.json
-    try:
-        grade = Grade(**data)
-        if grade.validate():
-            grade.save()
-            return Response(dumps({'message': f" Grade {data['grade']} Created"}), status=200)
-        return 'Not a valid grade'
-    except Exception as e:
-        return Response(dumps({'message': e}), status=400)
+    user = None
+    if 'user' in session:
+        user = loads(session['user'])
+        print(user)
+    if request.method == 'GET':
+        grades = Grade.objects
+        if user:
+            profile = Profile.objects(user=user['_id']).get()
+            if user['usertype'] == 'is-staff':
+                grade = profile.standard
+                # print(pagination)
+                # print(grade, type(grade))
+                grade_list = []
+                for i in grade:
+                    grade_list.append(int((i.split('-'))[0]))
+                # print(grade_list)
+                grades = grades(grade__in=grade_list)
+
+            if user['usertype'] == 'is_student':
+                return Response({"status": "failure", 'data': 'Your not have access to view this page'})
+
+        # page = request.args.get(get_page_parameter(), type=int, default=1)
+        # grades = pagination.paginate(grades, Grade)
+        # grades = grades.paginate(page=1, per_page=10)
+        return Response(dumps({'status': 'success', 'data': ''}), status=200)
+    if request.method == 'POST':
+        data = request.json
+        try:
+            grade = Grade(**data)
+            if grade.validate():
+                grade.save()
+                return Response(dumps({'message': f" Grade {data['grade']} Created"}), status=200)
+            return 'Not a valid grade'
+        except Exception as e:
+            return Response(dumps({'message': e}), status=400)
 
 
 @academics.route('grade/<int:id>', methods=['PATCH', 'DELETE'])
@@ -64,14 +116,15 @@ def subject(id=None):
 '''Subject Update and Delete'''
 
 
-@academics.route('subject/<int:id>', methods=['PATCH', 'DELETE'])
+@academics.route('subject/<int:id>', methods=['GET', 'PATCH', 'DELETE'])
 def subjectUD(id=None):
+    try:
+        query = get_object(Subject, id)
+    except Exception as e:
+        return Response(dumps({'message': str(e)}), status=400)
     if request.method == 'PATCH':
-        data = request.json
-        query = Subject.objects(id=int(id)).first()
-        print(query.to_json())
-        if query:
-            # try:
+        try:
+            data = request.json
             code = Subject.objects(code=str(data['code'])).first()
             print(id)
             if code is None or code.id == id:
@@ -79,13 +132,13 @@ def subjectUD(id=None):
                 return Response(dumps({'message': f" From Standard {str(query.grade_id.grade)},Subject {query.name} updated to {data['name']} "}), status=400)
             else:
                 return Response(dumps({'message': f' {code.name} Subject code already exists'}), status=404)
-            # except Exception as e:
-            #     print(e)
-            #     return Response(dumps({'message': str(e)}), status=400)
+        except Exception as e:
+            print(e)
+            return Response(dumps({'message': str(e)}), status=400)
     if request.method == 'DELETE':
-        subject = Subject.objects(id=id).first()
-        subject.delete()
+        query.delete()
         return Response(dumps({'status': 'success', "data": f"chapter {subject.name} deleted successfully"}))
+    return Response(dumps({'status': 'success', 'data': query.to_json()}))
 
 
 '''Chapter creation and retrieval'''
@@ -116,17 +169,17 @@ def chapter():
 
 @ academics.route('chapter/<id>/', methods=['GET', 'PATCH', "DELETE"])
 def chapter_edit(id):
-    chapter = Chapter.objects(id=id).first()
-    if not chapter:
-        return Response(dumps({'status': 'failure', 'data': "chapter doesn't exists"}))
+    try:
+        chapter = get_object(Chapter, id)
+    except Exception as e:
+        return Response(dumps({'message': str(e)}))
     if request.method == "PATCH":
         data = request.json
         print(data)
         try:
             for key in data:
                 if key == 'subject':
-                    data['subject'] = Subject.objects(
-                        id=data['subject']).get()
+                    data['subject'] = get_object(Subject, data['subject'])
                 print(key)
                 setattr(chapter, key, data[key])
             chapter.save()
@@ -151,7 +204,7 @@ def chapter_list():
         grade = Grade.objects(grade=data['grade']).get()
         subject = Subject.objects(grade=str(grade.id),
                                   name=data['subject']).get()
-        chapters = Chapter.objects(subject_id=subject)
+        chapters = Chapter.objects(subject=subject)
         if not len(chapters):
             return Response(dumps({'status': 'failure', 'data': "subject doesn't have chapters"}))
         chapters = loads(chapters.to_json())
@@ -187,20 +240,20 @@ def question():
             return Response(dumps({'status': 'failure', 'data': str(e)}))
     if request.method == 'POST':
         data = request.json
-        # try:
-        data['question']['grade'] = Grade.objects(
-            id=data['question']['grade']).get()
-        data['question']['subject'] = Subject.objects(
-            id=data['question']['subject']).get()
-        data['question']['chapter'] = Chapter.objects(
-            id=data['question']['chapter']).get()
-        question = Question(**data['question'])
-        answer = Answer(**data['answer'], question=question)
-        question.save()
-        answer.save()
-        return Response(dumps({'staus': 'created'}))
-        # except Exception as e:
-        return Response(dumps({'status': 'question is not created', 'data': str(e)}))
+        try:
+            data['question']['grade'] = get_object(
+                Grade, data['question']['grade'])
+            data['question']['subject'] = get_object(
+                Subject, data['question']['subject'])
+            data['question']['chapter'] = get_object(
+                Chapter, data['question']['chapter'])
+            question = Question(**data['question'])
+            answer = Answer(**data['answer'], question=question)
+            question.save()
+            answer.save()
+            return Response(dumps({'staus': 'created'}))
+        except Exception as e:
+            return Response(dumps({'status': 'question is not created', 'data': str(e)}))
 
 # question edit
 
@@ -208,10 +261,10 @@ def question():
 @academics.route('question/<int:id>', methods=['PATCH', 'DELETE'])
 def questionUD(id):
     try:
-        question = Question.objects(id=id).get()
+        question = get_object(Question, id)
         answer = Answer.objects(question=question).get()
-    except:
-        return Response(dumps({'message': 'Question doesn\'t exist'}))
+    except Exception as e:
+        return Response(dumps({'message': str(e)}))
     if question and answer:
         if request.method == 'PATCH':
             data = request.json
@@ -312,7 +365,7 @@ def question_list():
             if 'overall_marks' in data:
                 data['overall_marks'] = int(data['overall_marks'])
             grade = Grade.objects(grade=data['grade']).get()
-            subject = Subject.objects(id=data['subject']).get()
+            subject = get_object(Subject, data['subject'])
             user = loads(session['user'])
             questions = []
             if 'customize' in data and data['customize']:
@@ -408,9 +461,10 @@ def question_list():
 
 @ academics.route('question-paper/<id>/', methods=['GET', 'PATCH', "DELETE"])
 def question_paper_edit(id):
-    question_paper = Question_paper.objects(id=id).first()
-    if not question_paper:
-        return Response(dumps({'status': 'failure', 'data': "question paper doesn't exists"}))
+    try:
+        question_paper = get_object(Question_paper, id)
+    except Exception as e:
+        return Response(dumps({'message': str(e)}))
     if request.method == "PATCH":
         data = request.json
         print(data)
@@ -434,30 +488,36 @@ def question_paper_edit(id):
 
 @ academics.route('test-questions', methods=['GET'])
 def question_from_question_paper():
-    question_paper_id = request.args.get('question_paper')
-    question_paper = Question_paper.objects(id=question_paper_id).first()
+    try:
+        question_paper_id = request.args.get('question_paper')
+        question_paper = get_object(Question_paper, question_paper_id)
+    except Exception as e:
+        return Response(dumps({'message': 'give a valid question paper id'}))
     question_list = question_paper.question_list
     data = []
     change = False
     # print(question_list, type(question_list))
-    for id in list(question_list):
-        pipeline = [{"$match": {"_id": id}}, {"$lookup": {
-            "from": "answer",
-            "localField": "answer",
-            "foreignField": "_id",
-            "as": "answer"
-        }}]
-        question = list(Question.objects.aggregate(
-            pipeline=pipeline))[0]
-        print(question)
-        if question:
-            data.append(json_util.dumps(question))
-        else:
-            question_list.remove(id)
-            change = True
-    if change:
-        question_paper.question_list = question_list
-        question_paper.save()
+    try:
+        for id in list(question_list):
+            pipeline = [{"$match": {"_id": id}}, {"$lookup": {
+                "from": "answer",
+                "localField": "answer",
+                "foreignField": "_id",
+                "as": "answer"
+            }}]
+            question = list(Question.objects.aggregate(
+                pipeline=pipeline))[0]
+            print(question)
+            if question:
+                data.append(json_util.dumps(question))
+            else:
+                question_list.remove(id)
+                change = True
+        if change:
+            question_paper.question_list = question_list
+            question_paper.save()
+    except Exception as e:
+        return Response(dumps({'message': str(e)}))
     return Response(dumps({'status': 'success', 'data': data}), status=200)
 
 # test create
@@ -483,12 +543,12 @@ def test():
     if request.method == 'POST':
         try:
             data = request.json
-            data['grade'] = Grade.objects(id=data['grade']).get()
-            data['subject'] = Subject.objects(id=data['subject']).get()
+            data['grade'] = get_object(Grade, data['grade'])
+            data['subject'] = get_object(Subject, data['subject'])
             data['created_staff_id'] = User.objects(
                 id=user['_id'], usertype__ne='is_student').get()
-            data['question_paper'] = Question_paper.objects(
-                id=data['question_paper']).get()
+            data['question_paper'] = get_object(
+                Question_paper, data['question_paper'])
             test_query = Test(**data)
             question_paper = data['question_paper']
             test_query.save()
@@ -513,7 +573,7 @@ def test_edit(id):
         for key in data:
             if key == 'question_paper' or key == 'grade' or key == 'subject':
                 print(key, models[key])
-                data[key] = models[key].objects(id=data[key]).get()
+                data[key] = get_object(models, data[key])
             print(data[key])
             setattr(test, key, data[key])
         test.save()
@@ -559,13 +619,13 @@ def test_result():
     if request.method == 'POST':
         try:
             data = request.json
-            data['grade'] = Grade.objects(id=data['grade']).get()
-            data['subject'] = Subject.objects(id=data['subject']).get()
-            data['question_paper'] = Question_paper.objects(
-                id=data['question_paper']).get()
+            data['grade'] = get_object(Grade, data['grade'])
+            data['subject'] = get_object(Subject, data['subject'])
+            data['question_paper'] = get_object(
+                Question_paper, data['question_paper'])
             data['student_id'] = User.objects(
                 id=user['_id'], usertype='is_student').get()
-            data['test_id'] = Test.objects(id=data['test_id']).get()
+            data['test_id'] = get_object(Test, data['test_id'])
             resultquery = Testresult(student_id=data['student_id'], grade=data['grade'], subject=data['subject'], test_id=data['test_id'],
                                      question_paper=data['question_paper'], result=data['result'], score=data[
                 'score'], correct_answer=data['correct_answer'],
