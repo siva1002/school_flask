@@ -16,6 +16,7 @@ from mongoengine import (
     DictField,
     CASCADE,
 )
+import re
 import datetime
 from flask_login import UserMixin
 import uuid
@@ -84,34 +85,44 @@ class Subject(Document):
     id = SequenceField(primary_key=True)
     name = StringField(max_length=20)
     code = StringField(max_length=20)
-    grade = ReferenceField(Grade, reverse_delete_rule=CASCADE, dbref=True)
+    grade_id = ReferenceField(Grade, reverse_delete_rule=CASCADE, dbref=True)
     created_at = DateField(default=datetime.datetime.now())
     meta = {'collection': 'subject'}
 
     def validate(self, clean=True):
+        print('validate')
         objects = Subject.objects
+        sname=str(self.name).upper()
         if objects:
             code = Subject.objects(
                 code=(str(self.name[:3]).upper()+str(self.code)).upper())
-            subject = Subject.objects(grade=self.grade, name=self.name)
+            subject = Subject.objects(grade_id=self.grade_id, name=sname).first()
             print(self.code, 'new')
             if subject:
                 print(subject.to_json())
                 raise ValidationError(
                     message='Subject already exists for this grade')
             if code:
-                print(code.to_json())
                 raise ValidationError(
                     message='Code already exists give another one')
-
         else:
             return True
-
+    def update(self, **kwargs):
+        #re.- regular expersion -re.findall(pattern, string, flags=0) ('\d+ pattern is match  this specific rule d+ )
+        code=re.findall('\d+',kwargs['code'])
+        name=str(kwargs['name']).upper()
+        subcode=name[:3]+code[0]
+        subjectcode=Subject.objects(code=subcode , id__ne=self.id).first()
+        if subjectcode:
+            raise ValidationError({'message':'Subjectcode already exists'})
+        kwargs['name']=name
+        kwargs['code']=subcode
+        return super().update(**kwargs)
     def save(self, *args, **kwargs):
         subjects = Subject.objects
         if subjects:
-            self.code = (self.name[:3]+str(self.code)).upper()
             self.name = str(self.name).upper()
+            self.code = (self.name[:3]+str(self.code)).upper()
         else:
             self.name = str(self.name).upper()
             self.code = (self.name[:3]+str(self.code)).upper()
@@ -122,7 +133,7 @@ class Chapter(Document):
     id = SequenceField(primary_key=True)
     name = StringField(max_length=30)
     chapter_no = IntField(min_value=0)
-    subject_id = ReferenceField(
+    subject = ReferenceField(
         Subject, reverse_delete_rule=CASCADE, dbref=True)
     description = StringField(max_length=50)
     created_at = DateTimeField(default=datetime.datetime.now())
@@ -139,110 +150,12 @@ class Chapter(Document):
             raise ValidationError(
                 message="this subject has the chapter in this name altready")
         return super().validate(clean)
-
-
+   
 class Question(Document):
-   grade = ReferenceField(Grade, reverse_delete_rule=CASCADE)
-   subject = ReferenceField(Subject, reverse_delete_rule=CASCADE)
-   chapter = ReferenceField(Chapter,reverse_delete_rule=CASCADE)
-   question = StringField(max_length=150)
-   duration = IntField()
-   mark = IntField()
-   chapter_no = IntField()
-   created_at = DateField(default=datetime.datetime.now())
-   question_type = StringField(max_length=20,choices={'filling_in_blanks','MCQ'},default= None)
-   congitive_level =  StringField(max_length=20,choices={ 'application','knowledge','comprehension'},default=None)
-   difficulty_level = StringField(max_length=20,choies={'medium','hard','easy'},default=None)
-   meta = {'collection':'questions'}  
-
-
-   
-class Answer(Document):
     id = SequenceField(primary_key=True)
-    question=ReferenceField(Question,reverse_delete_rule=CASCADE,dbref=True)
-    option_a=StringField(max_length=40)
-    option_b=StringField(max_length=40)
-    option_c=StringField(max_length=40)
-    option_d=StringField(max_length=40)
-    correctanswer = StringField(choices={"option_d","option_c","option_b","option_a"})
-   
-class Instruction(Document):
-    id = SequenceField(primary_key=True)
-    note = StringField(max_length=250)
-    meta = {'collection':'instruction'}
-    def validate(self, clean=False):
-        objects = Instruction.objects(note=self.note).first()
-        if objects and objects.note == self.note:
-            return False
-        else:
-            return True
-
-class Test(Document):
-    # question_paper= ReferenceField(Question_paper,reverse_delete_rule=CASCADE)
-    grade = ReferenceField(Grade,reverse_delete_rule=CASCADE)
-    subject = ReferenceField(Subject,reverse_delete_rule=CASCADE)
-    duration = IntField()
-    mark = IntField()
-    remarks = StringField(max_length=250)
-    description = StringField(max_length=100)
-    test_id = IntField()
-    pass_percentage = IntField()
-    meta = {'collection':'test'}
-
-
-class Testresult(Document):
-    student_id = ReferenceField(User,reverse_delete_rule=CASCADE)
-    grade = ReferenceField(Grade,reverse_delete_rule=CASCADE)
-    subject = ReferenceField(Subject,reverse_delete_rule=CASCADE)
-    test_id = ReferenceField(Test,reverse_delete_rule=CASCADE)
-    # question_paper = ReferenceField(Question_paper,reverse_delete_rule=CASCADE)
-    result = StringField(max_length=20)
-    score = IntField()
-    correct_answer = IntField()
-    worong_answer = IntField()
-    unanswer_question = IntField()
-    meta ={'collection':'testresult'}
-
-
-class Question_bank(Document):
-    id = SequenceField(primary_key=True)#squencefield is change the id value form objects id 
-    grade = ReferenceField(Grade,reverse_delete_rule=CASCADE)
-    subject = ReferenceField(Subject,reverse_delete_rule=CASCADE)
-    meta = {'collection':'question_bank'}
-
-
-
-
-
-
-
-# class Question_bank(Document):
-#     grade = ReferenceField(Grade,reverse_delete_rule=CASCADE)
-#     subject = ReferenceField(Subject,reverse_delete_rule=CASCADE)
-#     meta = {'collection':'question_bank'}
-
-
-
-
-
-
-
-
-
-
-
-#    def clean(self):
-#        question = Question.objects()
-#        if question:
-#          self.id = question.count()  
-#        else:
-#         self.id = 0
-#    def save(self,*args,**kwargs):
-#         super().save(*args,**kwargs) 
-    id = SequenceField(primary_key=True)
-    grade = ReferenceField(Grade, reverse_delete_rule=CASCADE)
-    subject = ReferenceField(Subject, reverse_delete_rule=CASCADE)
-    chapter = ReferenceField(Chapter, reverse_delete_rule=CASCADE)
+    grade = ReferenceField(Grade, reverse_delete_rule=CASCADE,dbref=True)
+    subject = ReferenceField(Subject, reverse_delete_rule=CASCADE,dbref=True)
+    chapter = ReferenceField(Chapter, reverse_delete_rule=CASCADE, dbref=True)
     question = StringField(max_length=150)
     duration = IntField()
     mark = IntField()
@@ -258,6 +171,10 @@ class Question_bank(Document):
     # answer=
     meta = {'collection': 'questions'}
 
+    def validate(self, clean=True):
+        self.chapter_no = self.chapter.chapter_no
+        return super().validate(clean)
+
 
 class Answer(Document):
     id = SequenceField(primary_key=True)
@@ -272,16 +189,80 @@ class Answer(Document):
 
 
 class Question_paper(Document):
-    id = SequenceField()
+    id = SequenceField(primary_key=True)
     grade = ReferenceField(Grade, reverse_delete_rule=CASCADE)
     subject = ReferenceField(Subject, reverse_delete_rule=CASCADE)
     file = FileField(upload_to='question_files/')
     created_by = StringField(max_length=20)
     created_at = DateTimeField(default=datetime.datetime.now())
-    test_id = StringField(max_length=25)
+    test_uid = StringField(max_length=25)
     question_list = ListField()
     timing = IntField(min_value=0)
     overall_marks = IntField(min_value=0)
 
     def __str__(self):
         return (str(self.grade)+' '+str(self.subject))
+
+
+class Test(Document):
+    id = SequenceField(primary_key=True)
+    question_paper = ReferenceField(
+        Question_paper, reverse_delete_rule=CASCADE, dbref=True)
+    grade = ReferenceField(Grade, reverse_delete_rule=CASCADE, dbref=True,)
+    subject = ReferenceField(Subject, reverse_delete_rule=CASCADE, dbref=True)
+    duration = IntField()
+    created_staff_id = ReferenceField(
+        User, reverse_delete_rule=CASCADE, dbref=True)
+    mark = IntField()
+    remarks = StringField(max_length=250)
+    description = StringField(max_length=100)
+    test_uid = StringField()
+    pass_percentage = IntField()
+    meta = {'collection': 'test'}
+
+    def validate(self, clean=False):
+        if not self.test_uid:
+            self.test_uid = (str(uuid.uuid4()))[:16]
+        if not self.duration:
+            self.duration = self.question_paper.timing
+        if not self.mark:
+            self.mark = self.question_paper.overall_marks
+        return super().validate(clean)
+
+
+class Testresult(Document):
+    id = SequenceField(primary_key=True)
+    student_id = ReferenceField(User, reverse_delete_rule=CASCADE, dbref=True)
+    grade = ReferenceField(Grade, reverse_delete_rule=CASCADE, dbref=True)
+    subject = ReferenceField(Subject, reverse_delete_rule=CASCADE, dbref=True)
+    test_id = ReferenceField(Test, reverse_delete_rule=CASCADE, dbref=True)
+    question_paper = ReferenceField(
+        Question_paper, reverse_delete_rule=CASCADE, dbref=True)
+    result = StringField(max_length=20)
+    score = IntField()
+    correct_answer = IntField()
+    wrong_answer = IntField()
+    unanswer_question = IntField()
+    test_details = ListField(DictField())
+    created_at = DateTimeField(default=datetime.datetime.now())
+    meta = {'collection': 'testresult'}
+
+
+class Question_bank(Document):
+    id = SequenceField(primary_key=True)
+    grade = ReferenceField(Grade, reverse_delete_rule=CASCADE)
+    subject = ReferenceField(Subject, reverse_delete_rule=CASCADE)
+    meta = {'collection': 'question_bank'}
+
+
+class Instruction(Document):
+    id = SequenceField(primary_key=True)
+    note = StringField(max_length=250)
+    meta = {'collection': 'instruction'}
+
+    def validate(self, clean=False):
+        objects = Instruction.objects(note=self.note).first()
+        if objects and objects.note == self.note:
+            return False
+        else:
+            return True

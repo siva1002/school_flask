@@ -26,6 +26,7 @@ pipeline = [{"$lookup": {
 
 
 @accounts.route('/')
+# @token_required
 def userdetails():
     user = loads(session['user'])
     print(user['user_type'])
