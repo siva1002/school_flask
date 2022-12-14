@@ -59,10 +59,14 @@ def subject():
     if grade is not None:
         try:
             grades = Grade.objects(grade=grade).first()
-            queryset = Subject.objects(grade_id=grades.id)
+            queryset = queryset(grade_id=grades.id)
             data=queryset.to_json()
-            print(data)
-            return Response(dumps({'status': 'success',"data":data}), status=200)
+           
+            if len(queryset) < 0:
+                return Response(dumps({'status': 'success',"data":data}), status=200)
+            return Response(dumps({"status":f"No Subject for this grade {grade}"}), status=206)
+           
+            
         except:
             return Response(dumps({'status': 'failed'}), status=206)
     return Response(dumps({"status": "success","data":queryset.to_json()}),status=200)
