@@ -1,7 +1,7 @@
 from flask import Blueprint, request, Response, jsonify, session, render_template
 from json import dumps, loads
 from .models import *
-from .utils import token_required, render_to_pdf2, get_object
+from .utils import token_required, render_to_pdf2, get_object, pagination
 from .models import Chapter
 import random
 from bson import json_util
@@ -24,20 +24,6 @@ models = {
 
 # grade
 
-# if user.is_anonymous:
-#     queryset = Grade.objects.all()
-# elif user.user_type == 'is_staff':
-#     grade = user.profile.standard
-#     grade_list = []
-#     for i in grade:
-#         grade_list.append(int(i[0]))
-#     print(grade, grade_list)
-#     queryset = queryset.filter(grade__in=grade_list)
-# elif user.user_type == 'is_student':
-#     return Response({"status": "failure", 'data': 'Your not have access to view this page'})
-# serializer = GradeSerializer(queryset, many=True)
-# return Response({"status": "success", 'data': serializer.data})
-
 
 @academics.route('grade/', methods=['GET', 'POST'])
 def grade():
@@ -47,6 +33,7 @@ def grade():
         print(user)
     if request.method == 'GET':
         grades = Grade.objects
+        page = request.args.get('page')
         if user:
             profile = Profile.objects(user=user['_id']).get()
             if user['usertype'] == 'is-staff':
@@ -61,11 +48,12 @@ def grade():
 
             if user['usertype'] == 'is_student':
                 return Response({"status": "failure", 'data': 'Your not have access to view this page'})
-
+        if page:
+            result = pagination('http://127.0.0.0:7000/grade', grades, page, 2)
         # page = request.args.get(get_page_parameter(), type=int, default=1)
         # grades = pagination.paginate(grades, Grade)
         # grades = grades.paginate(page=1, per_page=10)
-        return Response(dumps({'status': 'success', 'data': ''}), status=200)
+        return Response(dumps({'status': 'success', 'data': result}), status=200)
     if request.method == 'POST':
         data = request.json
         try:

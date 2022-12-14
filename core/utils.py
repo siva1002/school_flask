@@ -79,3 +79,21 @@ def render_to_pdf2(template_src, folder_name, question_paper, params: dict):
 def get_object(model, value):
     obj = model.objects(id=value).get()
     return obj
+
+
+def pagination(url, result, page, limit):
+    obj = {}
+    page = int(page)
+    count = result.count()
+    if (limit*(page-1)) > count:
+        page = 1
+    start = limit * (page-1)
+    end = start + limit
+    if count <= end:
+        end = count
+    else:
+        obj['next'] = url + '?page={}'.format(page+1)
+    if page != 1:
+        obj['previous'] = url+'?page={}'.format(page-1)
+    obj['result'] = (result[start:end]).to_json()
+    return obj
