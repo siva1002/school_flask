@@ -154,6 +154,9 @@ class Question(Document):
    congitive_level =  StringField(max_length=20,choices={ 'application','knowledge','comprehension'},default=None)
    difficulty_level = StringField(max_length=20,choies={'medium','hard','easy'},default=None)
    meta = {'collection':'questions'}  
+
+
+   
 class Answer(Document):
     id = SequenceField(primary_key=True)
     question=ReferenceField(Question,reverse_delete_rule=CASCADE,dbref=True)
@@ -185,6 +188,8 @@ class Test(Document):
     test_id = IntField()
     pass_percentage = IntField()
     meta = {'collection':'test'}
+
+
 class Testresult(Document):
     student_id = ReferenceField(User,reverse_delete_rule=CASCADE)
     grade = ReferenceField(Grade,reverse_delete_rule=CASCADE)
@@ -197,6 +202,8 @@ class Testresult(Document):
     worong_answer = IntField()
     unanswer_question = IntField()
     meta ={'collection':'testresult'}
+
+
 class Question_bank(Document):
     id = SequenceField(primary_key=True)#squencefield is change the id value form objects id 
     grade = ReferenceField(Grade,reverse_delete_rule=CASCADE)
