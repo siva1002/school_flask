@@ -108,7 +108,7 @@ class Subject(Document):
         else:
             return True
     def update(self, **kwargs):
-        #re.- regular expersion -re.findall(pattern, string, flags=0) ('\d+ pattern is match  this specific rule d+ )
+        #re.- regular expersion -re.findall(pattern, string, flags=0) ('\d+ = digit value pattern is match  this specific rule d+ ) 
         code=re.findall('\d+',kwargs['code'])
         name=str(kwargs['name']).upper()
         subcode=name[:3]+code[0]
