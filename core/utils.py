@@ -85,15 +85,20 @@ def pagination(url, result, page, limit):
     obj = {}
     page = int(page)
     count = result.count()
-    if (limit*(page-1)) > count:
+    start = limit*(page-1)
+    end_page = count/limit
+    if start > count:
         page = 1
-    start = limit * (page-1)
+        start = limit * (page-1)
     end = start + limit
-    if count <= end:
+    if count <= (start+limit):
         end = count
+        obj['next'] = url + '?page={}'.format(1)
     else:
         obj['next'] = url + '?page={}'.format(page+1)
     if page != 1:
         obj['previous'] = url+'?page={}'.format(page-1)
+    else:
+        obj['previous'] = url+'?page={}'.format(end_page)
     obj['result'] = (result[start:end]).to_json()
     return obj
