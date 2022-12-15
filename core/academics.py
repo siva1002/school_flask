@@ -105,20 +105,25 @@ def subject():
     queryset = Subject.objects
     grade = request.args.get('grade')
     page = request.args.get('page')
-    if grade:
+    if grade and page:
+        print('hi')
+        grades = Grade.objects(grade=grade).first()
+        queryset = queryset(grade_id=grades.id)
+        result = pagination('http://127.0.0.0:7000/subject', queryset, page, 2)
+        return Response(dumps({'status': 'success', "data": result}), status=200)
+    if grade or page:
         try:
-            grades = Grade.objects(grade=grade).first()
-            queryset = queryset(grade_id=grades.id)
-            data = queryset.to_json()
-            print(data)
-
-            return Response(dumps({'status': 'success', "data": data}), status=200)
+            if grade:
+                grades = Grade.objects(grade=grade).first()
+                queryset = queryset(grade_id=grades.id)
+                data = queryset.to_json()
+                return Response(dumps({'status': 'success', "data": data}), status=200)
+            if page:
+                result = pagination('http://127.0.0.0:7000/subject', queryset, page, 2)
+                return Response(dumps({'status': 'success', "data": result}), status=200)
         except Exception as e:
             return Response(dumps({'status': 'failed', 'data': str(e)}), status=206)
-    if page:
-        result = pagination(
-            'http://127.0.0.0:7000/subject', queryset, page, 2)
-        return Response(dumps({'status': 'success', "data": result}), status=200)
+   
     return Response(dumps({"status": "success", "data": queryset.to_json()}), status=200)
 
 
