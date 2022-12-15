@@ -104,13 +104,18 @@ def subject():
             return Response(dumps({'message': str(e)}), status=404)
     queryset = Subject.objects
     grade = request.args.get('grade')
-    if grade is not None:
+    page = request.args.get('page')
+    if grade:
         try:
             grades = Grade.objects(grade=grade).first()
             queryset = queryset(grade_id=grades.id)
             data = queryset.to_json()
             print(data)
             if len(queryset) > 0:
+                if page:
+                    result = pagination(
+                        'http://127.0.0.0:7000/grade', queryset, page, 2)
+                    return Response(dumps({'status': 'success', "data": result}), status=200)
                 return Response(dumps({'status': 'success', "data": data}), status=200)
             return Response(dumps({"status": f"No Subject for this grade {grade}"}), status=206)
 
@@ -167,8 +172,13 @@ def chapter():
             return Response(dumps({'message': str(e)}))
         return Response(dumps({'message': f"{data['name']} Created"}))
     if request.method == "GET":
+        page = request.args.get('page')
         chapters = Chapter.objects
         print(chapters)
+        if page:
+            result = pagination(
+                'http://127.0.0.0:7000/grade', chapters, page, 2)
+            return Response(dumps({'status': 'success', "data": result}), status=200)
         return Response(dumps({'status': 'success', 'data': chapters.to_json()}), status=200)
 
 
