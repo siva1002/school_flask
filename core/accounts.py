@@ -52,7 +52,7 @@ def userdetails():
 @accounts.route('login/', methods=['POST'])
 def login():
     data = request.get_json()
-    user = User.objects(email=data['email'], phone=data['phone'])[0]
+    user = User.objects(email=data['email'], phone=data['phone']).get()
     if not user:
         return Response(dumps({'message': "User doesn't Existed"}), status=204)
     token = (Token.objects(user_id=user)).first()
@@ -83,7 +83,7 @@ def signup():
         return Response(dumps({'message': str(e)}), status=400)
 
 
-# user id
+# user edit
 @accounts.route('user/<id>', methods=['GET', 'PATCH', 'DELETE'])
 def user(id):
     user_pipeline = pipeline
@@ -126,6 +126,8 @@ def profile():
     user = User.objects.aggregate(pipeline=user_pipeline)
     return Response(dumps({'status': 'success', 'data': dumps(user)}), status=200)
 
+# user check for signup
+
 
 @accounts.route('check-user/', methods=['GET'])
 def check_for_user():
@@ -139,6 +141,8 @@ def check_for_user():
             return Response(dumps({'status': 'failure', 'data': 'phone altready exists'}), status=206)
     print(email, 'ji', phone)
     return Response(status=200)
+
+# edit profile
 
 
 @accounts.route('student-profile/', methods=['GET', 'PATCH'])
@@ -159,7 +163,6 @@ def profile_edit():
             data = request.json
             for key in data:
                 if not hasattr(profile, key):
-                    print('dsa')
                     return Response(dumps({'status': 'failure', "data": "check user data"}), status=206)
                 setattr(profile, key, data[key])
             profile.save()

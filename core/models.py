@@ -92,11 +92,12 @@ class Subject(Document):
     def validate(self, clean=True):
         print('validate')
         objects = Subject.objects
-        sname=str(self.name).upper()
+        sname = str(self.name).upper()
         if objects:
             code = Subject.objects(
                 code=(str(self.name[:3]).upper()+str(self.code)).upper())
-            subject = Subject.objects(grade_id=self.grade_id, name=sname).first()
+            subject = Subject.objects(
+                grade_id=self.grade_id, name=sname).first()
             print(self.code, 'new')
             if subject:
                 print(subject.to_json())
@@ -107,17 +108,18 @@ class Subject(Document):
                     message='Code already exists give another one')
         else:
             return True
+
     def update(self, **kwargs):
-        #re.- regular expersion -re.findall(pattern, string, flags=0) ('\d+ = digit value pattern is match  this specific rule d+ ) 
-        code=re.findall('\d+',kwargs['code'])
-        name=str(kwargs['name']).upper()
-        subcode=name[:3]+code[0]
-        subjectcode=Subject.objects(code=subcode , id__ne=self.id).first()
+        code = re.findall('\d+', kwargs['code'])
+        name = str(kwargs['name']).upper()
+        subcode = name[:3]+code[0]
+        subjectcode = Subject.objects(code=subcode, id__ne=self.id).first()
         if subjectcode:
-            raise ValidationError({'message':'Subjectcode already exists'})
-        kwargs['name']=name
-        kwargs['code']=subcode
+            raise ValidationError({'message': 'Subjectcode already exists'})
+        kwargs['name'] = name
+        kwargs['code'] = subcode
         return super().update(**kwargs)
+
     def save(self, *args, **kwargs):
         subjects = Subject.objects
         if subjects:
@@ -150,11 +152,12 @@ class Chapter(Document):
             raise ValidationError(
                 message="this subject has the chapter in this name altready")
         return super().validate(clean)
-   
+
+
 class Question(Document):
     id = SequenceField(primary_key=True)
-    grade = ReferenceField(Grade, reverse_delete_rule=CASCADE,dbref=True)
-    subject = ReferenceField(Subject, reverse_delete_rule=CASCADE,dbref=True)
+    grade = ReferenceField(Grade, reverse_delete_rule=CASCADE, dbref=True)
+    subject = ReferenceField(Subject, reverse_delete_rule=CASCADE, dbref=True)
     chapter = ReferenceField(Chapter, reverse_delete_rule=CASCADE, dbref=True)
     question = StringField(max_length=150)
     duration = IntField()

@@ -6,8 +6,10 @@ from .accounts import accounts
 from .academics import academics
 from flask_cors import CORS
 import datetime
+# from flask_rest_paginate import Pagination
 
 db = None
+pagination = None
 
 
 def create_app():
@@ -22,6 +24,7 @@ def create_app():
     # mongo.init_app(app)
     # print(mongo)
     app.register_blueprint(accounts, url_prefix='/')
+    # db = accounts.db
     app.register_blueprint(academics, url_prefix='/')
     app.config["SESSION_PERMANENT"] = False
     app.config["SESSION_TYPE"] = "filesystem"

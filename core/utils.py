@@ -3,6 +3,7 @@ from flask import render_template, make_response, session, request
 from functools import wraps
 import os
 from io import BytesIO
+import math
 from xhtml2pdf import pisa
 import uuid
 from pathlib import Path
@@ -50,7 +51,7 @@ def render_to_pdf2(template_src, folder_name, question_paper, params: dict):
     filename = str(uuid.uuid4())
     pdf = pisa.pisaDocument(BytesIO(html.encode("UTF-8")), result)
     exists = False
-
+  #parameter 
     if not question_paper:
         grade = params['grade']
         subject = params['subject']
@@ -76,13 +77,33 @@ def render_to_pdf2(template_src, folder_name, question_paper, params: dict):
     return question_paper, True
 
 
-# def index():
-#     name = "SIR JOHN WILLIAMSON LATHAM"
-#     html = render_template(
-#         "certificate.html",
-#         name=name)
-#     pdf = pdfkit.from_string(html, False)
-#     response = make_response(pdf)
-#     response.headers["Content-Type"] = "application/pdf"
-#     response.headers["Content-Disposition"] = "inline; filename=output.pdf"
-#     return response
+def get_object(model, value):
+    obj = model.objects(id=value).get()
+    return obj
+
+
+def pagination(url, result, page, limit):
+    obj = {}
+    page = int(page)
+    count = result.count()
+    start = limit*(page-1)
+     # .cell it float value is rounded 3.12 its comes to 4 
+    end_page = math.ceil(count/limit)
+    if start > count:
+        page = 1
+        start = limit * (page-1)
+    end = start + limit
+    if count <= (start+limit):
+        end = count
+        obj['next'] = url + '?page={}'.format(1)
+    else:
+        obj['next'] = url + '?page={}'.format(page+1)
+    if page != 1:
+        obj['previous'] = url+'?page={}'.format(page-1)
+    else:
+        obj['previous'] = url+'?page={}'.format(end_page)
+    obj['result'] = result[start:end]
+    if not isinstance(obj['result'], dict):
+        print(type(result))
+        obj['result'] = obj['result'].to_json()
+    return obj
