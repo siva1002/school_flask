@@ -6,8 +6,8 @@ from .models import Chapter
 import random
 from bson import json_util
 from mongoengine import connect, get_db
-from flask_paginate import get_parameter, get_page_parameter, Pagination
-from flask_rest_paginate import Pagination
+# from flask_paginate import get_parameter, get_page_parameter, Pagination
+# from flask_rest_paginate import Pagination
 # from . import pagination
 from .accounts import db
 
@@ -49,11 +49,14 @@ def grade():
             if user['usertype'] == 'is_student':
                 return Response({"status": "failure", 'data': 'Your not have access to view this page'})
         if page:
-            result = pagination('http://127.0.0.0:7000/grade', grades, page, 2)
+            grades = pagination('http://127.0.0.0:7000/grade',
+                                grades, page, 2)
+        else:
+            grades = grades.to_json()
         # page = request.args.get(get_page_parameter(), type=int, default=1)
         # grades = pagination.paginate(grades, Grade)
         # grades = grades.paginate(page=1, per_page=10)
-        return Response(dumps({'status': 'success', 'data': result}), status=200)
+        return Response(dumps({'status': 'success', 'data': grades}), status=200)
     if request.method == 'POST':
         data = request.json
         try:
@@ -240,7 +243,13 @@ def question():
                 if from_chapter_no and to_chapter_no:
                     questions = questions(
                         chapter_no__gte=from_chapter_no, chapter_no__lte=to_chapter_no)
-            return Response(dumps({"status": "success", 'data': questions.to_json()}), status=200)
+            page = request.args.get('page')
+            if page:
+                questions = pagination('http://127.0.0.0:7000/question',
+                                       questions, page, 2)
+            else:
+                questions = questions.to_json()
+            return Response(dumps({"status": "success", 'data': questions}), status=200)
         except Exception as e:
             return Response(dumps({'status': 'failure', 'data': str(e)}))
     if request.method == 'POST':
@@ -345,18 +354,24 @@ def load_chapter_no(request):
 def question_list():
     if request.method == 'GET':
         grade = request.args.get('grade')
-        subject = request.args.get('subject').upper()
+        subject = request.args.get('subject')
         question_papers = Question_paper.objects
         try:
             if grade:
                 grade_obj = Grade.objects(grade=grade).get()
                 question_papers = question_papers(grade=grade_obj.id)
                 if subject:
+                    subject = subject.upper()
                     subject_obj = Subject.objects(
                         grade=grade_obj.id, name=subject).get()
                     question_papers = question_papers(
                         subject=subject_obj.id)
-            question_papers = question_papers.to_json()
+            page = request.args.get('page')
+            if page:
+                question_papers = pagination('http://127.0.0.0:7000/question-list',
+                                             question_papers, page, 2)
+            else:
+                question_papers = question_papers.to_json()
             return Response(dumps({'status': 'success', 'data': question_papers}), status=200)
         except Exception as e:
             return Response(dumps({"status": "failure", "data": str(e)}), status=206)
@@ -542,7 +557,13 @@ def test():
             if test_uid:
                 test = test(test_uid=test_uid).first()
                 return Response(dumps({"status": "success", 'data': test.to_json()}), status=200)
-            return Response(dumps({"status": "success", 'data': test.to_json()}), status=200)
+            page = request.args.get('page')
+            if page:
+                test = pagination('http://127.0.0.0:7000/test',
+                                  test, page, 2)
+            else:
+                test = test.to_json()
+            return Response(dumps({"status": "success", 'data': test}), status=200)
         except Exception as e:
             return Response(dumps({"status": "failure", "data": str(e)}), status=206)
     if request.method == 'POST':
@@ -617,7 +638,13 @@ def test_result():
                 student = User.objects(
                     id=student_id, usertype='is_student').get()
                 test_result = test_result(student_id=student.id)
-            return Response(dumps({"status": "success", 'data': test_result.to_json()}), status=200)
+            page = request.args.get('page')
+            if page:
+                test_result = pagination('http://127.0.0.0:7000/testresult',
+                                         test_result, page, 2)
+            else:
+                test_result = test_result.to_json()
+            return Response(dumps({"status": "success", 'data': test_result}), status=200)
         except Exception as e:
             return Response(dumps({'status': 'success', 'data': str(e)}), status=206)
 
@@ -660,20 +687,3 @@ def resultupdate(id):
     if request.method == 'DELETE':
         testresult.delete()
         return Response(dumps({"status": "success", 'data': 'deleted'}), status=200)
-# def gradeget():
-#       user = self.request.user
-#         queryset = self.get_queryset()
-
-#         if user.is_anonymous:
-#             queryset = Grade.objects.all()
-#         elif user.user_type == 'is_staff':
-#             grade = user.profile.standard
-#             grade_list = []
-#             for i in grade:
-#                 grade_list.append(int(i[0]))
-#             print(grade,grade_list)
-#             queryset = queryset.filter(grade__in=grade_list)
-#         elif user.user_type == 'is_student':
-#             return Response({"status": "failure", 'data': 'Your not have access to view this page'})
-#         serializer = GradeSerializer(queryset, many=True)
-#         return Response({"status": "success", 'data': serializer.data})

@@ -3,6 +3,7 @@ from flask import render_template, make_response, session, request
 from functools import wraps
 import os
 from io import BytesIO
+import math
 from xhtml2pdf import pisa
 import uuid
 from pathlib import Path
@@ -86,7 +87,7 @@ def pagination(url, result, page, limit):
     page = int(page)
     count = result.count()
     start = limit*(page-1)
-    end_page = count/limit
+    end_page = math.ceil(count/limit)
     if start > count:
         page = 1
         start = limit * (page-1)
@@ -100,5 +101,8 @@ def pagination(url, result, page, limit):
         obj['previous'] = url+'?page={}'.format(page-1)
     else:
         obj['previous'] = url+'?page={}'.format(end_page)
-    obj['result'] = (result[start:end]).to_json()
+    obj['result'] = result[start:end]
+    if not isinstance(obj['result'], dict):
+        print(type(result))
+        obj['result'] = obj['result'].to_json()
     return obj
