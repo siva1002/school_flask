@@ -111,16 +111,14 @@ def subject():
             queryset = queryset(grade_id=grades.id)
             data = queryset.to_json()
             print(data)
-            if len(queryset) > 0:
-                if page:
-                    result = pagination(
-                        'http://127.0.0.0:7000/grade', queryset, page, 2)
-                    return Response(dumps({'status': 'success', "data": result}), status=200)
-                return Response(dumps({'status': 'success', "data": data}), status=200)
-            return Response(dumps({"status": f"No Subject for this grade {grade}"}), status=206)
 
-        except:
-            return Response(dumps({'status': 'failed'}), status=206)
+            return Response(dumps({'status': 'success', "data": data}), status=200)
+        except Exception as e:
+            return Response(dumps({'status': 'failed', 'data': str(e)}), status=206)
+    if page:
+        result = pagination(
+            'http://127.0.0.0:7000/subject', queryset, page, 2)
+        return Response(dumps({'status': 'success', "data": result}), status=200)
     return Response(dumps({"status": "success", "data": queryset.to_json()}), status=200)
 
 
@@ -177,7 +175,7 @@ def chapter():
         print(chapters)
         if page:
             result = pagination(
-                'http://127.0.0.0:7000/grade', chapters, page, 2)
+                'http://127.0.0.0:7000/chapter', chapters, page, 2)
             return Response(dumps({'status': 'success', "data": result}), status=200)
         return Response(dumps({'status': 'success', 'data': chapters.to_json()}), status=200)
 
