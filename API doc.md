@@ -50,3 +50,13 @@
 ### Failure Response
 ` User Does Not Exist`
 <br><br> 
+
+# User Details
+## **$~~~$** Methods<br>
+**$~~~~~$** `GET,PATCH,DELETE`
+* **GET**
+#### $~~~~~~~~~~$ URL $~~$ : **$~$ user/id**
+### $~~~~~~~~~$ Responses<br>
+ **$~~~~~~~~~~~~~~~$**   **Success Response**<br>
+ **$~~~~~~~~~~~~~~~$**   **$~~~~~~~$**  `{"status" : "success",`<br>
+ **$~~~~~~~~~~~~~~~$**   **$~~~~~~~$**  `"data" : []}`

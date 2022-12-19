@@ -40,7 +40,7 @@ def userdetails():
             pipeline=user_pipeline)
     else:
         user_pipeline.insert(
-            0, {'$match': {'_id': int(user['_id'])}})
+            0, {'$match': {'_id': int(user['id'])}})
         queryset = User.objects.aggregate(
             pipeline=user_pipeline)
     queryset = dumps(queryset)
@@ -89,13 +89,17 @@ def signup():
 # user edit
 @accounts.route('user/<id>', methods=['GET', 'PATCH', 'DELETE'])
 def user(id):
-    user_pipeline = pipeline
-    user_pipeline = user_pipeline.insert(0, {'$match': {'_id': int(id)}})
+    print("*********************")
+    pipe = pipeline
+    pipe.insert(0, {'$match': {'_id': int(id)}})
+    print(pipe)
     user = User.objects(id=int(id))
     if not user:
         return Response(dumps({'message': "User doesn't Existed"}), status=400)
     if request.method == 'GET':
-        user = User.objects.aggregate(pipeline=user_pipeline)
+        user = User.objects.aggregate(pipeline=pipe)
+        print("********************************")
+        print(user)
         return Response(dumps({'status': 'success', 'data': dumps(user)}), status=200)
     elif request.method == 'PATCH':
         data = request.json
