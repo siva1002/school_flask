@@ -356,7 +356,7 @@ def load_test(request):
 
 @academics.route('load_chapter', methods=['GET'])
 def load_chapter_no(request):
-    subject_id = request.GET.get('subject', None)
+    subject_id = request.args.get('subject', None)
     chapter = Chapter.objects(subject_id=subject_id)
     return render_template('dropdown_chapter_no.html', items=list(chapter))
 
