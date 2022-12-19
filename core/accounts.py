@@ -52,9 +52,12 @@ def userdetails():
 @accounts.route('login/', methods=['POST'])
 def login():
     data = request.get_json()
-    user = User.objects(email=data['email'], phone=data['phone']).get()
-    if not user:
-        return Response(dumps({'message': "User doesn't Existed"}), status=204)
+    try:
+       print('try')
+       user = User.objects(email=data['email'], phone=data['phone']).get()
+    except:
+        print('except')
+        return Response(dumps({'message': "User doesn't Existed"}), status=400)
     token = (Token.objects(user_id=user)).first()
     if not token:
         token = Token(user_id=user)
@@ -62,8 +65,8 @@ def login():
     session["token"] = token.token_id
     session["user"] = user.to_json()
     print(session['token'])
-    return Response(dumps({'status': user.to_json(), 'token': token.token_id}), status=200)
-
+    return Response(dumps({'status':'Logged in Successfully ','data': user.to_json(), 'token': token.token_id}), status=200)
+ 
 # signup
 
 
@@ -77,7 +80,7 @@ def signup():
         user.save()
         profile = Profile(**data['profile'], user=user)
         profile.save()
-        return Response(dumps({'message': 'created'}), status=200)
+        return Response(dumps({'message': 'User {} created'.format(**data['profile']['fullname'])}), status=200)
     except Exception as e:
         print(e, 'error')
         return Response(dumps({'message': str(e)}), status=400)
