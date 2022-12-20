@@ -61,9 +61,19 @@
  **$~~~~~~~~~~~~~~~~~~~~~~$**  ` User Does Not Exist`
 <br><br> 
 
+* **DELETE**
+#### $~~~~~~~~~~$ URL $~~$ : **$~$ user/id**
+### $~~~~~~~~~$    Responses<br>
+ $~~~~~~~~~~~$     **Success Response**<br>
+  $~~~~~~~~~~~$  `{"status" : "User Deleted Successfully",`<br>
+
+$~~~~~~~~~~~$    **Failure Response**<br>
+  $~~~~~~~~~~~$  `User Dosen't exist`
+<br><br> 
+
 * **PATCH**
 #### $~~~~~~~~~~$ URL $~~$ : **$~$ user/id** 
- >>>### Data Params
+### Data Params
       {
          {"user":
             {
@@ -87,13 +97,12 @@
  * **Failure Response**<br>
   ` Exception while updating`
 <br><br> 
+** **
 
-* **DELETE**
-#### $~~~~~~~~~~$ URL $~~$ : **$~$ user/id**
->>###   Responses<br>
- >>*   **Success Response**<br>
-  `{"status" : "User Deleted Successfully",`<br>
-
- >>* **Failure Response**<br>
-  `User Dosen't exist`
-<br><br> 
+# Profile
+#### $~~~~~~~~~~$ URL $~~$ : **$~$ /profile**
+###  Responses<br>
+ *   **Success Response $~$ (if user logged in)**<br>
+ $~~$  `{"status" : "success" , "data":<[logged in user data]>}`
+ * **Failure Response**<br>
+ $~~$ ` User Does not logged in `
