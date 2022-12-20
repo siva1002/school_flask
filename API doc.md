@@ -62,6 +62,32 @@
  **$~~~~~~~~~~~~~~~~~~~~~~$**  ` User Does Not Exist`
 <br><br> 
 
+* **PATCH**
+  ### Data Params
+        {
+          {"user":
+              {
+              "email":"user735@gmail.com",
+              "phone":"9248786695",
+              "usertype":"is-admin",
+              "registernumber":"user7529"
+              },
+          "profile":{
+                      "firstname":"user73",
+                      "lastname":"new",
+                      "fullname":"harry",
+                      "address":"new",
+                      "standard":["1-A"]}
+                      }
+          }
+  ###  Responses<br>
+  *   **Success Response**<br>
+    `{"status" : "Updated Successfully",`<br>
+
+  * **Failure Response**<br>
+    ` Exception while updating`
+  <br><br> 
+
 * **DELETE**
 
 ### $~~~~~~~~~$    Responses<br>
@@ -72,31 +98,7 @@ $~~~~~~~~~~~$    **Failure Response**<br>
   $~~~~~~~~~~~$  `User Dosen't exist`
 <br><br> 
 
-* **PATCH**
-### Data Params
-      {
-         {"user":
-            {
-            "email":"user735@gmail.com",
-            "phone":"9248786695",
-            "usertype":"is-admin",
-            "registernumber":"user7529"
-            },
-        "profile":{
-                    "firstname":"user73",
-                    "lastname":"new",
-                    "fullname":"harry",
-                    "address":"new",
-                    "standard":["1-A"]}
-                    }
-        }
-###  Responses<br>
- *   **Success Response**<br>
-  `{"status" : "Updated Successfully",`<br>
 
- * **Failure Response**<br>
-  ` Exception while updating`
-<br><br> 
 
 # Profile
 #### $~~~~~~~~~~$ URL $~~$ : **$~$ /profile**
@@ -108,7 +110,7 @@ $~~~~~~~~~~~$    **Failure Response**<br>
 # Grade
   #### URL $~~$ : **$~$ /grade**
    ##  Methods<br>
-  **$~~~~~$** `GET,'POST',PATCH,DELETE`
+  **$~~~~~$** `GET,POST,PATCH,DELETE`
   * **POST**
       ### Data Params
           {
@@ -121,16 +123,16 @@ $~~~~~~~~~~~$    **Failure Response**<br>
   ` Grade already exists `
   * **GET**
     ### Responses<br>
-  *   **Success Response**<br>
-      * ### if student user logged in
-        `{"status" : "success" , "data:[grade of student]"}`
-      * ### if staff user logged in
-        `{"status" : "success" , "data:[<grades which allocated to the logged in staff>]"}`
+    *   **Success Response**<br>
+        * ### if student user logged in
+          `{"status" : "success" , "data:[grade of student]"}`
+        * ### if staff user logged in
+          `{"status" : "success" , "data:[<grades which allocated to the logged in staff>]"}`
 
-      * ### if admin user logged in
-          `{"status" : "success" , "data:[<all grades>]"}`
-  * **Failure Response**<br>
-  $~~~$`{"status": "failure", 'data': 'Your not have access to view this page'}`
+        * ### if admin user logged in
+            `{"status" : "success" , "data:[<all grades>]"}`
+    * **Failure Response**<br>
+    $~~~$`{"status": "failure", 'data': 'Your not have access to view this page'}`
   ** **
    * **PATCH**
      #### URL $~~$ : **$~$ /grade/id**
@@ -142,14 +144,14 @@ $~~~~~~~~~~~$    **Failure Response**<br>
       *   **Success Response**<br>
      ` {"message": "Grade  Updated "}`
      * **Failure Response**<br>
-     ** **
   `{"status": "failure", 'data': '<Exception error while updating>'}`
+  ** **
   * **DELETE**
      #### URL $~~$ : **$~$ /grade/id**
       ### Responses<br>
       *   **Success Response**<br>
-     ` {"message": "Grade  Deleted "}`
+        ` {"message": "Grade  Deleted "}`
      * **Failure Response**<br>
-  `{"status": "failure", 'data': '<Exception error while updating>'}`
-  ** ** 
-  ** **
+    `{"status": "failure", 'data': '<Exception error while updating>'}`
+    ** ** 
+    ** **
