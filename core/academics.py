@@ -38,8 +38,6 @@ def grade():
             profile = Profile.objects(user=user['_id']).get()
             if user['usertype'] == 'is-staff':
                 grade = profile.standard
-                # print(pagination)
-                # print(grade, type(grade))
                 grade_list = []
                 for i in grade:
                     grade_list.append(int((i.split('-'))[0]))
@@ -53,9 +51,6 @@ def grade():
                                 grades, page, 2)
         else:
             grades = grades.to_json()
-        # page = request.args.get(get_page_parameter(), type=int, default=1)
-        # grades = pagination.paginate(grades, Grade)
-        # grades = grades.paginate(page=1, per_page=10)
         return Response(dumps({'status': 'success', 'data': grades}), status=200)
     if request.method == 'POST':
         data = request.json

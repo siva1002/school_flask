@@ -1,5 +1,6 @@
-# Signup
 
+
+# Signup
 #### $~~~~~~~~~~$ URL $~~$ : **$~$ /signup**
 
 * **Method:**
@@ -51,8 +52,8 @@
 # User Details
 ## **$~~~$** Methods<br>
 **$~~~~~$** `GET,PATCH,DELETE`
+#### $~~~~~$ URL $~~$ : **$~$ user/id**
 * **GET**
-#### $~~~~~~~~~~$ URL $~~$ : **$~$ user/id**
 ### $~~~~~~~~~$ Responses<br>
  **$~~~~~~~~~~~~~~~$**   **Success Response**<br>
  **$~~~~~~~~~~~~~~~$**   **$~~~~~~~$**  `{"status" : "success",`<br>
@@ -62,7 +63,7 @@
 <br><br> 
 
 * **DELETE**
-#### $~~~~~~~~~~$ URL $~~$ : **$~$ user/id**
+
 ### $~~~~~~~~~$    Responses<br>
  $~~~~~~~~~~~$     **Success Response**<br>
   $~~~~~~~~~~~$  `{"status" : "User Deleted Successfully",`<br>
@@ -72,7 +73,6 @@ $~~~~~~~~~~~$    **Failure Response**<br>
 <br><br> 
 
 * **PATCH**
-#### $~~~~~~~~~~$ URL $~~$ : **$~$ user/id** 
 ### Data Params
       {
          {"user":
@@ -97,7 +97,6 @@ $~~~~~~~~~~~$    **Failure Response**<br>
  * **Failure Response**<br>
   ` Exception while updating`
 <br><br> 
-** **
 
 # Profile
 #### $~~~~~~~~~~$ URL $~~$ : **$~$ /profile**
@@ -106,3 +105,51 @@ $~~~~~~~~~~~$    **Failure Response**<br>
  $~~$  `{"status" : "success" , "data":<[logged in user data]>}`
  * **Failure Response**<br>
  $~~$ ` User Does not logged in `
+# Grade
+  #### URL $~~$ : **$~$ /grade**
+   ##  Methods<br>
+  **$~~~~~$** `GET,'POST',PATCH,DELETE`
+  * **POST**
+      ### Data Params
+          {
+              "grade":<int>,"section":<array of sections>
+          }
+    ### Responses<br>
+    *   **Success Response $~$ (if user logged in)**<br>
+    `{"status" : "success" , "message":"Grade Created"}`
+    * **Failure Response**<br>
+  ` Grade already exists `
+  * **GET**
+    ### Responses<br>
+  *   **Success Response**<br>
+      * ### if student user logged in
+        `{"status" : "success" , "data:[grade of student]"}`
+      * ### if staff user logged in
+        `{"status" : "success" , "data:[<grades which allocated to the logged in staff>]"}`
+
+      * ### if admin user logged in
+          `{"status" : "success" , "data:[<all grades>]"}`
+  * **Failure Response**<br>
+  $~~~$`{"status": "failure", 'data': 'Your not have access to view this page'}`
+  ** **
+   * **PATCH**
+     #### URL $~~$ : **$~$ /grade/id**
+     ### Data Params
+          {
+              "grade":<int>,"section":<array of sections>
+          }
+      ### Responses<br>
+      *   **Success Response**<br>
+     ` {"message": "Grade  Updated "}`
+     * **Failure Response**<br>
+     ** **
+  `{"status": "failure", 'data': '<Exception error while updating>'}`
+  * **DELETE**
+     #### URL $~~$ : **$~$ /grade/id**
+      ### Responses<br>
+      *   **Success Response**<br>
+     ` {"message": "Grade  Deleted "}`
+     * **Failure Response**<br>
+  `{"status": "failure", 'data': '<Exception error while updating>'}`
+  ** ** 
+  ** **
