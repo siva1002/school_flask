@@ -1,52 +1,48 @@
 
 
 # Signup
-#### $~~~~~~~~~~$ URL $~~$ : **$~$ /signup**
+  #### URL $~~$ : **$~$ /signup**
 
-* **Method:**
-  `POST`
-### Data Params
-       {
-         {"user":
-            {
-            "email":"user735@gmail.com",
-            "phone":"9248786695",
-            "usertype":"is-admin",
-            "registernumber":"user7529"
-            },
-        "profile":{
-                    "firstname":"user73",
-                    "lastname":"new",
-                    "fullname":"harry",
-                    "address":"new",
-                    "standard":["1-A"]}
-                    }
-        }
- ## Responses
-** **
-### Success Response
-
-`User created successfully`
-### Failure Response
-` returns the Exception while the process `
+* **Method:**`POST`
+    ### Data Params
+          {
+            {"user":
+                {
+                "email":"user735@gmail.com",
+                "phone":"9248786695",
+                "usertype":"is-admin",
+                "registernumber":"user7529"
+                },
+            "profile":{
+                        "firstname":"user73",
+                        "lastname":"new",
+                        "fullname":"harry",
+                        "address":"new",
+                        "standard":["1-A"]}
+                        }
+            }
+  ## Responses
+     * **Success Response**<br>
+    `User created successfully`
+    * **Failure Response**<br>
+    ` returns the Exception while the process `
 <br><br> 
 
 # Login 
-#### $~~~~~~~~~~$ URL $~~$ : **$~$ /login**
+  ####  URL $~~$ : **$~$ /login**
 ### Data Params
         {
         "email:<email>
         "phone":<phone>
         }
 ## Responses
-** **
-### Success Response
+ *   **Success Response**<br>
 
-`{status : "successfully logged in"`<br>
-`data   : <logged in users data>`<br>
-`token  : <token>}`
-### Failure Response
-` User Does Not Exist`
+      `{status : "successfully logged in"`<br>
+  `data   : <logged in users data>`<br>
+  `token  : <token>}`
+* **Failure Response**<br>
+      ` User Does Not Exist`
 <br><br> 
 
 # User Details
@@ -90,23 +86,23 @@
 
 * **DELETE**
 
-### $~~~~~~~~~$    Responses<br>
- $~~~~~~~~~~~$     **Success Response**<br>
-  $~~~~~~~~~~~$  `{"status" : "User Deleted Successfully",`<br>
+  ### Responses<br>
+    * **Success Response**<br>
+      `{"status" : "User Deleted Successfully",`<br>
 
-$~~~~~~~~~~~$    **Failure Response**<br>
-  $~~~~~~~~~~~$  `User Dosen't exist`
-<br><br> 
+  * **Failure Response**<br>
+    `User Dosen't exist`
+  <br><br> 
 
 
 
 # Profile
-#### $~~~~~~~~~~$ URL $~~$ : **$~$ /profile**
-###  Responses<br>
- *   **Success Response $~$ (if user logged in)**<br>
- $~~$  `{"status" : "success" , "data":<[logged in user data]>}`
- * **Failure Response**<br>
- $~~$ ` User Does not logged in `
+  #### URL $~~$ : **$~$ /profile**
+  ###  Responses<br>
+  *   **Success Response $~$ (if user logged in)**<br>
+    `{"status" : "success" , "data":<[logged in user data]>}`
+  * **Failure Response**<br>
+   ` User Does not logged in `
 # Grade
   #### URL $~~$ : **$~$ /grade**
    ##  Methods<br>
@@ -147,11 +143,56 @@ $~~~~~~~~~~~$    **Failure Response**<br>
   `{"status": "failure", 'data': '<Exception error while updating>'}`
   ** **
   * **DELETE**
-     #### URL $~~$ : **$~$ /grade/id**
+     #### URL $~~$ : *$~$ /grade/id*
       ### Responses<br>
       *   **Success Response**<br>
         ` {"message": "Grade  Deleted "}`
      * **Failure Response**<br>
     `{"status": "failure", 'data': '<Exception error while updating>'}`
-    ** ** 
+    ** **
+    ** **
+    # Subject
+  #### URL $~~$ : **$~$ /grade**
+   ##  Methods<br>
+  **$~~~~~$** `GET,POST,PATCH,DELETE`
+  * **POST**
+      ### Data Params
+          {
+          "name":<string>,"code":<int>,"grade":<grade id>
+           }
+    ### Responses<br>
+    *   **Success Response $~$ (if user logged in)**<br>
+    `{"status" : "success" , "message":"Subject Created"}`
+    * **Failure Response**<br>
+  ` Exception while process `
+  * **GET**
+    ##  query params
+        grade=grade id
+    ### Responses<br>
+    *   **Success Response**<br>
+          `{"status" : "success" , "data:[subjects in grade]"`
+
+    * **Failure Response**<br>
+    $~~~$`{"status": "failure", 'data': 'No subjects in grade'}`
+  ** **
+   * **PATCH**
+     #### URL $~~$ : **$~$ /subject/id**
+     ### Data Params
+          {
+          "name":<string>,"code":<int>,"grade":<grade id>
+           }
+      ### Responses<br>
+      *   **Success Response**<br>
+     ` {"message": "Subject Updated "}`
+     * **Failure Response**<br>
+  `{"status": "failure", 'data': '<Exception error while updating>'}`
+  ** **
+  * **DELETE**
+     #### URL $~~$ : *$~$ /grade/id*
+      ### Responses<br>
+      *   **Success Response**<br>
+        ` {"message": "Subject Deleted "}`
+     * **Failure Response**<br>
+    `{"status": "failure", 'data': '<Exception error while delete>'}`
+    ** **
     ** **
